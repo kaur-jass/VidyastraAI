@@ -383,12 +383,6 @@ const AdminDashboard = () => {
                 Courses
               </button>
               <button
-                onClick={() => setActiveTab('ai-settings')}
-                className={`px-3 py-2 text-sm transition-colors hover:text-white cursor-pointer ${activeTab === 'ai-settings' ? 'dashboard-tab-active' : ''}`}
-              >
-                AI Settings
-              </button>
-              <button
                 onClick={() => setActiveTab('logs')}
                 className={`px-3 py-2 text-sm transition-colors hover:text-white cursor-pointer ${activeTab === 'logs' ? 'dashboard-tab-active' : ''}`}
               >
@@ -421,7 +415,7 @@ const AdminDashboard = () => {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Quick Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="stats-card bg-white p-5 rounded-xl shadow-xs border-t-4 border-blue-600 text-center">
                 <span className="text-gray-500 text-xs uppercase block font-semibold">Total Students</span>
                 <span className="text-3xl font-extrabold text-[#003A6A]">{overviewStats?.totalStudents}</span>
@@ -434,94 +428,9 @@ const AdminDashboard = () => {
                 <span className="text-gray-500 text-xs uppercase block font-semibold">Registered Courses</span>
                 <span className="text-3xl font-extrabold text-[#003A6A]">{overviewStats?.totalCourses}</span>
               </div>
-              <div className="stats-card bg-white p-5 rounded-xl shadow-xs border-t-4 border-orange-500 text-center">
-                <span className="text-gray-500 text-xs uppercase block font-semibold">AI API Calls Today</span>
-                <span className="text-3xl font-extrabold text-orange-600">{overviewStats?.aiRequestsToday}</span>
-              </div>
             </div>
 
-            {/* System Health / API Monitoring */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Server Resources */}
-              <div className="bg-white p-6 rounded-xl shadow-md md:col-span-2 space-y-4">
-                <h3 className="text-lg font-bold text-[#003A6A] border-b pb-2">System Resources & Health Monitor</h3>
-                
-                <div className="space-y-4">
-                  {/* CPU Usage */}
-                  <div>
-                    <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1">
-                      <span>Server CPU Load</span>
-                      <span className={systemHealth.cpuUsage > 75 ? 'text-red-600' : 'text-emerald-600'}>{systemHealth.cpuUsage}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-500 ${systemHealth.cpuUsage > 75 ? 'bg-red-500' : 'bg-emerald-500'}`} 
-                        style={{ width: `${systemHealth.cpuUsage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* RAM Usage */}
-                  <div>
-                    <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1">
-                      <span>RAM Allocation</span>
-                      <span className="text-emerald-600">{systemHealth.memoryUsage}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-emerald-500 transition-all duration-500" 
-                        style={{ width: `${systemHealth.memoryUsage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* API response metrics */}
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="bg-gray-50 p-3 rounded-lg border text-center">
-                      <span className="text-xs text-gray-500 block">Avg Response Latency</span>
-                      <span className="text-lg font-bold text-gray-800">{systemHealth.latencyMs} ms</span>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded-lg border text-center">
-                      <span className="text-xs text-gray-500 block">Database Status</span>
-                      <span className="text-lg font-bold text-emerald-600">Active ✓</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* API Service Config status */}
-              <div className="bg-white p-6 rounded-xl shadow-md flex flex-col justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-[#003A6A] border-b pb-2">Active LLM Copilot</h3>
-                  <div className="mt-4 space-y-3">
-                    <div>
-                      <span className="text-xs text-gray-400 block font-semibold uppercase">API Provider</span>
-                      <span className="inline-block bg-blue-100 text-[#003A6A] font-bold text-sm px-2.5 py-0.5 rounded mt-1">
-                        {aiSettings.provider || 'Gemini Pro'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-400 block font-semibold uppercase">Temperature</span>
-                      <span className="text-sm font-semibold text-gray-800">{aiSettings.temperature}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-400 block font-semibold uppercase">Vidyastra Endpoint</span>
-                      <span className="text-xs text-emerald-600 font-semibold block mt-1">Operational (200 OK)</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t mt-4">
-                  <button
-                    onClick={() => setActiveTab('ai-settings')}
-                    className="w-full border border-[#003A6A] text-[#003A6A] hover:bg-blue-50 text-sm font-bold py-2 rounded-lg transition"
-                  >
-                    Adjust AI Parameters
-                  </button>
-                </div>
-              </div>
-            </div>
-
+          
             {/* Audit Log preview */}
             <div className="bg-white p-6 rounded-xl shadow-md">
               <div className="flex justify-between items-center border-b pb-2 mb-4">
@@ -718,136 +627,8 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* TAB 4: AI CONFIGURATION */}
-        {activeTab === 'ai-settings' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            {/* Setting form */}
-            <div className="bg-white p-6 rounded-xl shadow-md lg:col-span-2 space-y-4">
-              <h2 className="text-xl font-bold text-[#003A6A] border-b pb-2 mb-4">AI Parameters Configuration</h2>
-              
-              <form onSubmit={handleSaveAISettings} className="space-y-5">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">API Model Provider</label>
-                  <select
-                    value={aiProvider}
-                    onChange={e => setAiProvider(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-[#003A6A]"
-                  >
-                    <option value="Gemini Pro">Google Gemini Pro (Recommended)</option>
-                    <option value="GPT-4 Turbo">OpenAI GPT-4 Turbo</option>
-                    <option value="Llama-3 (Local)">Meta Llama-3 (Local Endpoint)</option>
-                  </select>
-                </div>
 
-                {/* Slider values */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex justify-between text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                      <span>Sampling Temperature</span>
-                      <span className="font-semibold text-gray-800">{aiTemperature}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0.0"
-                      max="1.2"
-                      step="0.05"
-                      value={aiTemperature}
-                      onChange={e => setAiTemperature(parseFloat(e.target.value))}
-                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#003A6A]"
-                    />
-                    <div className="flex justify-between text-[10px] text-gray-400 mt-1">
-                      <span>Strict / Precise</span>
-                      <span>Creative / Random</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                      <span>Max Response Tokens</span>
-                      <span className="font-semibold text-gray-800">{aiMaxTokens}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="256"
-                      max="4096"
-                      step="128"
-                      value={aiMaxTokens}
-                      onChange={e => setAiMaxTokens(parseInt(e.target.value))}
-                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#003A6A]"
-                    />
-                    <div className="flex justify-between text-[10px] text-gray-400 mt-1">
-                      <span>Short</span>
-                      <span>Long Form</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">System Instructions Prompt</label>
-                  <textarea
-                    rows="5"
-                    value={aiSystemPrompt}
-                    onChange={e => setAiSystemPrompt(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg text-sm font-mono focus:outline-[#003A6A]"
-                    placeholder="Enter default system directives..."
-                  />
-                  <span className="text-[10px] text-gray-400 mt-1.5 block">Defines global behaviors and boundaries for the student/teacher copilot interface.</span>
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-[#003A6A] hover:bg-[#004a8a] text-white text-sm font-bold py-2.5 rounded-lg shadow-xs cursor-pointer text-center"
-                  >
-                    Apply Config Parameters
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Test Connection Info Card */}
-            <div className="bg-white p-6 rounded-xl shadow-md flex flex-col justify-between space-y-4 h-fit">
-              <div>
-                <h3 className="text-lg font-bold text-[#003A6A] border-b pb-2 mb-3">Model Connectivity Probe</h3>
-                <p className="text-xs text-gray-500 leading-relaxed mb-4">
-                  Trigger an instantaneous connection check to test if the Vidyastra server can successfully communicate with the underlying AI models (Gemini, ChatGPT) via API endpoints.
-                </p>
-
-                <div className="bg-gray-50 p-4 rounded-lg border space-y-2.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Active Test Target:</span>
-                    <span className="font-semibold text-gray-800">{aiProvider}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">API Status:</span>
-                    <span className="font-semibold text-emerald-600">Operational</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={handleTestAI}
-                  disabled={isTestingAI}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-bold text-sm py-2.5 rounded-lg transition cursor-pointer flex justify-center items-center gap-2"
-                >
-                  {isTestingAI ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      <span>Probing Model...</span>
-                    </>
-                  ) : (
-                    <span>🔌 Test AI Connection</span>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: AUDIT LOGS */}
+        {/* TAB 4: AUDIT LOGS */}
         {activeTab === 'logs' && (
           <div className="bg-white p-6 rounded-xl shadow-md space-y-4">
             <div>
