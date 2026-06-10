@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -6,20 +6,18 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'users', 'courses', 'ai-settings', 'logs'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'users', 'courses', 'logs'
 
   // Dynamic Databases loaded from API
   const [overviewStats, setOverviewStats] = useState(null);
-  const [systemHealth, setSystemHealth] = useState({ cpuUsage: 0, memoryUsage: 0, dbConnection: 'Unknown', llmEndpoint: 'Unknown', latencyMs: 0 });
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [aiSettings, setAiSettings] = useState({ provider: '', temperature: 0.7, maxTokens: 1000, systemPrompt: '' });
   const [auditLogs, setAuditLogs] = useState([]);
-  
+
   // App states
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
-  
+
   // Search & Filters
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('all');
@@ -29,7 +27,6 @@ const AdminDashboard = () => {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null); // null means adding user, otherwise user object
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
-  const [isTestingAI, setIsTestingAI] = useState(false);
 
   // Form states - User Modal
   const [userName, setUserName] = useState('');
@@ -48,12 +45,6 @@ const AdminDashboard = () => {
   const [courseSchedule, setCourseSchedule] = useState('');
   const [courseTeacherId, setCourseTeacherId] = useState('');
 
-  // Form states - AI settings
-  const [aiProvider, setAiProvider] = useState('Gemini Pro');
-  const [aiTemperature, setAiTemperature] = useState(0.7);
-  const [aiMaxTokens, setAiMaxTokens] = useState(2048);
-  const [aiSystemPrompt, setAiSystemPrompt] = useState('');
-
   const triggerToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -64,26 +55,16 @@ const AdminDashboard = () => {
   const loadAllData = () => {
     return Promise.all([
       api.getOverviewStats(),
-      api.getSystemHealth(),
       api.getUsers(),
       api.getCourses(),
-      api.getAISettings(),
       api.getAuditLogs()
     ])
-      .then(([stats, health, usersList, coursesList, settings, logs]) => {
+      .then(([stats, usersList, coursesList, logs]) => {
         setOverviewStats(stats);
-        setSystemHealth(health);
         setUsers(usersList);
         setCourses(coursesList);
-        setAiSettings(settings);
         setAuditLogs(logs);
-        
-        // Sync AI form states
-        setAiProvider(settings.provider || 'Gemini Pro');
-        setAiTemperature(settings.temperature ?? 0.7);
-        setAiMaxTokens(settings.maxTokens ?? 2048);
-        setAiSystemPrompt(settings.systemPrompt || '');
-        
+
         // Default course teacher select to first teacher
         const teachers = usersList.filter(u => u.role === 'teacher');
         if (teachers.length > 0 && !courseTeacherId) {
@@ -100,12 +81,9 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     loadAllData();
-    // Poll system health metrics every 15 seconds to simulate resource monitors
-    const healthInterval = setInterval(() => {
-      api.getSystemHealth().then(health => setSystemHealth(health)).catch(() => {});
-    }, 15000);
-    return () => clearInterval(healthInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const handleLogout = () => {
     api.logout().then(() => {
@@ -150,8 +128,8 @@ const AdminDashboard = () => {
       email: userEmail,
       role: userRole,
       department: userDept,
-      details: userRole === 'student' 
-        ? { semester: userSemester } 
+      details: userRole === 'student'
+        ? { semester: userSemester }
         : { title: userFacultyTitle, facultyId: userFacultyId }
     };
 
@@ -242,56 +220,22 @@ const AdminDashboard = () => {
       });
   };
 
-  // AI Configuration Handlers
-  const handleSaveAISettings = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    const settings = {
-      provider: aiProvider,
-      temperature: parseFloat(aiTemperature),
-      maxTokens: parseInt(aiMaxTokens),
-      systemPrompt: aiSystemPrompt
-    };
 
-    api.updateAISettings(settings)
-      .then(() => {
-        triggerToast('AI configuration changes saved successfully.');
-        return loadAllData();
-      })
-      .catch(err => {
-        setLoading(false);
-        triggerToast('Failed to update settings: ' + err.message);
-      });
-  };
-
-  const handleTestAI = () => {
-    setIsTestingAI(true);
-    api.testAIConnection(aiProvider)
-      .then((res) => {
-        setIsTestingAI(false);
-        triggerToast(`Ping Success: Connected to ${aiProvider} in ${res.latencyMs}ms.`);
-      })
-      .catch(err => {
-        setIsTestingAI(false);
-        triggerToast(`Ping Failed: ${err.message}`);
-      });
-  };
 
   // Filters mapping
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(userSearch.toLowerCase()) || 
-                          user.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-                          user.username.toLowerCase().includes(userSearch.toLowerCase());
-    
+    const matchesSearch = user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+      user.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+      user.username.toLowerCase().includes(userSearch.toLowerCase());
+
     const matchesRole = userRoleFilter === 'all' || user.role === userRoleFilter;
-    
+
     return matchesSearch && matchesRole;
   });
 
   const filteredCourses = courses.filter(course => {
-    return course.name.toLowerCase().includes(courseSearch.toLowerCase()) || 
-           course.code.toLowerCase().includes(courseSearch.toLowerCase());
+    return course.name.toLowerCase().includes(courseSearch.toLowerCase()) ||
+      course.code.toLowerCase().includes(courseSearch.toLowerCase());
   });
 
   const facultyMembers = users.filter(u => u.role === 'teacher');
@@ -410,7 +354,7 @@ const AdminDashboard = () => {
 
       {/* Main Container */}
       <main className="flex-1 px-4 py-8 max-w-6xl mx-auto w-full animate-fade-in-up">
-        
+
         {/* TAB 1: OVERVIEW */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
@@ -430,7 +374,7 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-          
+
             {/* Audit Log preview */}
             <div className="bg-white p-6 rounded-xl shadow-md">
               <div className="flex justify-between items-center border-b pb-2 mb-4">
@@ -528,11 +472,10 @@ const AdminDashboard = () => {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-xs font-mono">{user.username}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                            user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                            user.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
-                            'bg-emerald-100 text-emerald-800'
-                          }`}>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                              user.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
+                                'bg-emerald-100 text-emerald-800'
+                            }`}>
                             {user.role}
                           </span>
                         </td>
