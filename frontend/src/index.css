@@ -1,1 +1,466 @@
-@import "tailwindcss";
+/* VidyastraAI Global Styles */
+
+:root {
+  --primary: #003A6A;
+  --accent: #FECD0B;
+  --accent-light: #F7DC6F;
+  --bg: #e9ecef;
+  --danger: #990000;
+  --success: #27ae60;
+  --info: #2980b9;
+  --warning: #f39c12;
+  --card-bg: #ffffff;
+  --text: #333333;
+  --text-muted: #6c757d;
+  --border: #dee2e6;
+  --sans-font: 'Inter', system-ui, -apple-system, sans-serif;
+  --heading-font: 'Outfit', 'Trebuchet MS', sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: var(--sans-font);
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 100vh;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  border-inline: none !important;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== Login Card ========== */
+.login-card {
+  background: #ffffff;
+  padding: 2.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 420px;
+  margin: 40px auto;
+  border: 1px solid #d1d5db;
+}
+
+.login-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.login-heading {
+  font-family: var(--heading-font);
+  font-size: 24px;
+  color: var(--primary);
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ========== Header Logo Responsive Styles ========== */
+.logo {
+  margin: 10px auto;
+  display: block;
+}
+
+.logo img {
+  max-width: 100%;
+  height: auto;
+}
+
+.logo2 {
+  display: none;
+}
+
+.logo2 img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 767px) {
+  .logo {
+    display: none !important;
+  }
+  .logo2 {
+    display: block !important;
+  }
+}
+
+/* ========== Navbar Overrides ========== */
+.navbar-inverse {
+  background-color: #222 !important;
+  border-color: #080808 !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* ========== CAPTCHA ========== */
+.captcha-canvas {
+  background-color: #f8fafc;
+  border: 2px solid #Addaff;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* ========== ERP Dashboard Panels ========== */
+.erp-page {
+  padding: 25px 0;
+}
+
+.erp-page-title {
+  font-family: var(--heading-font);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.erp-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.erp-panel-head {
+  background-color: var(--primary);
+  color: white;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.erp-panel-body {
+  padding: 15px;
+}
+
+/* ========== Stat Cards ========== */
+.stat-row {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 160px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px 15px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card .stat-number {
+  font-size: 28px;
+  font-weight: 800;
+  font-family: var(--heading-font);
+  color: var(--primary);
+  line-height: 1.2;
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+.stat-card.accent .stat-number { color: #e67e22; }
+.stat-card.success .stat-number { color: var(--success); }
+.stat-card.info .stat-number { color: var(--info); }
+.stat-card.danger .stat-number { color: #e74c3c; }
+
+/* ========== Dashboard Nav Cards (Student) ========== */
+.dash-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.dash-nav-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.dash-nav-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  border-color: var(--primary);
+}
+
+.dash-nav-card .card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.dash-nav-card .card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+
+.dash-nav-card .card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ========== Tab Navigation ========== */
+.erp-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.erp-tab {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.erp-tab:hover {
+  color: var(--primary);
+}
+
+.erp-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ========== Activity Feed ========== */
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f3f5;
+  font-size: 13px;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+/* ========== Streaming Elements ========== */
+.stream-screen {
+  position: relative;
+  width: 100%;
+  background: #1a1a2e;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+}
+
+.live-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #e74c3c;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  animation: pulse-dot 1.4s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ========== Overlay / Modal ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(2px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-box {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 520px;
+  padding: 30px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal-box-lg {
+  max-width: 680px;
+}
+
+/* ========== Loader (Forgot Password) ========== */
+.forgot-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  backdrop-filter: blur(2px);
+  z-index: 1099;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.forgot-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff;
+  padding: 30px 60px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.forgot-loader-spin {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid var(--primary);
+  border-radius: 50%;
+  width: 50px; height: 50px;
+  animation: spin-loader 1s linear infinite;
+}
+
+.forgot-loader-text {
+  margin-top: 15px;
+  font-size: 16px;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+@keyframes spin-loader {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========== Misc ========== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease forwards;
+}
+
+.text-primary { color: var(--primary) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-success { color: var(--success) !important; }
+.text-danger { color: #e74c3c !important; }
+
+/* Whiteboard inside panel */
+.whiteboard-area {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: crosshair;
+}
+
+/* Clean table inside panels */
+.erp-table {
+  width: 100%;
+  font-size: 13px;
+}
+
+.erp-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border);
+}
+
+.erp-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f3f5;
+  vertical-align: middle;
+}
+
+.erp-table tr:hover td {
+  background: #f8f9fa;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #aaa; }
