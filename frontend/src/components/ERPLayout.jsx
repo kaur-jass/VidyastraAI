@@ -115,7 +115,6 @@ const ERPLayout = ({ children, user, onLogout, onNavigate, isPublic = false }) =
             <div className="col-md-12">
               <p style={{ color: 'white', fontFamily: 'verdana', fontSize: '13px', textAlign: 'center', padding: '10px', margin: '0', lineHeight: '20px' }}>
                 Copyright 2026 © VidyastraAI Learning System<br />
-                Developed by: Computer Centre, VidyastraAI Academic Division
               </p>
             </div>
           </div>
