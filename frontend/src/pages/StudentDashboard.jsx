@@ -7,6 +7,40 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
   const [transcript, setTranscript] = useState([]);
   const [isLive, setIsLive] = useState(true);
 
+  // Live classes and interactive selection state
+  const [selectedLiveClass, setSelectedLiveClass] = useState(null);
+  const [liveClasses, setLiveClasses] = useState([
+    {
+      id: 1,
+      subject: 'Data Structures',
+      teacher: 'Dr. Sarah Verma',
+      topic: 'Arrays and Linked Lists',
+      startTime: '09:00 AM - 10:00 AM',
+      room: 'LHC-102',
+      duration: '45 mins elapsed',
+      studentsJoined: 42,
+      status: 'Live'
+    },
+    {
+      id: 2,
+      subject: 'Web Development',
+      teacher: 'Dr. Sarah Verma',
+      topic: 'React Hooks: useState & useEffect',
+      startTime: '10:15 AM - 11:15 AM',
+      room: 'LHC-204',
+      duration: '10 mins elapsed',
+      studentsJoined: 38,
+      status: 'Live'
+    }
+  ]);
+
+  const handleTabChange = (newTab) => {
+    setView(newTab);
+    if (newTab === 'live') {
+      setSelectedLiveClass(null);
+    }
+  };
+
   // Quiz state
   const [liveQuiz, setLiveQuiz] = useState(null);
   const [quizTimer, setQuizTimer] = useState(15);
@@ -52,6 +86,10 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
       setQuizSubmitted(false);
       setQuizFeedback('');
       triggerToast("⚠️ NEW LIVE QUIZ HAS BEEN PUSHED! Click to answer.");
+      
+      // Auto-join the Web Dev class (since that is where the quiz is pushed from)
+      const webDevClass = liveClasses.find(c => c.id === 2);
+      setSelectedLiveClass(webDevClass || liveClasses[0]);
       setView('live'); // Redirect to live view to answer!
     };
     window.addEventListener('new-live-quiz', handleQuiz);
@@ -165,7 +203,7 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
       user={user}
       onLogout={onLogout}
       activeTab={view}
-      onTabChange={setView}
+      onTabChange={handleTabChange}
       sidebarItems={sidebarItems}
       dashboardTitle="Student Dashboard"
       roleLabel="B.Tech CSE"
@@ -266,6 +304,22 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
           font-weight: bold;
           padding: 2px 8px;
           border-radius: 4px;
+        }
+
+        /* Pulse Animation for Live Badges */
+        @keyframes pulse-live-indicator {
+          0% { transform: scale(0.92); opacity: 0.6; }
+          50% { transform: scale(1.08); opacity: 1; }
+          100% { transform: scale(0.92); opacity: 0.6; }
+        }
+        .pulse-dot-live {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: white;
+          margin-right: 4px;
+          animation: pulse-live-indicator 1.8s infinite ease-in-out;
         }
         
         /* Circle Initials Subjects */
@@ -561,12 +615,12 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
 
             <StatCard
               icon="glyphicon-facetime-video"
-              count={12}
+              count={liveClasses.length}
               label="Live Classes Today"
               subtext="View timetable →"
               subtextColorClass="text-success"
               iconBgColorClass="color-green-bg"
-              onClick={() => setView('live')}
+              onClick={() => { setSelectedLiveClass(null); setView('live'); }}
             />
 
             <StatCard
@@ -611,7 +665,11 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
                     <span className="upcoming-subject">Data Structures</span>
                     <span className="upcoming-teacher">Dr. Sarah Verma</span>
                   </div>
-                  <span className="badge-live-pill" style={{ cursor: 'pointer' }} onClick={() => setView('live')}>Live</span>
+                  <span className="badge-live-pill" style={{ cursor: 'pointer' }} onClick={() => {
+                    const dsClass = liveClasses.find(c => c.id === 1);
+                    setSelectedLiveClass(dsClass || null);
+                    setView('live');
+                  }}>Live</span>
                 </div>
 
                 <div className="upcoming-row-item">
@@ -622,7 +680,11 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
                     <span className="upcoming-subject">Web Development</span>
                     <span className="upcoming-teacher">Dr. Sarah Verma</span>
                   </div>
-                  <span className="badge-live-pill" style={{ cursor: 'pointer' }} onClick={() => setView('live')}>Live</span>
+                  <span className="badge-live-pill" style={{ cursor: 'pointer' }} onClick={() => {
+                    const wdClass = liveClasses.find(c => c.id === 2);
+                    setSelectedLiveClass(wdClass || null);
+                    setView('live');
+                  }}>Live</span>
                 </div>
 
                 <div className="upcoming-row-item">
@@ -811,7 +873,11 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
                   </p>
                 </div>
               </div>
-              <button className="btn-action-solid" style={{ backgroundColor: '#16a34a' }} onClick={() => setView('live')}>
+              <button className="btn-action-solid" style={{ backgroundColor: '#16a34a' }} onClick={() => {
+                const wdClass = liveClasses.find(c => c.id === 2);
+                setSelectedLiveClass(wdClass || null);
+                setView('live');
+              }}>
                 Participate in Quiz
               </button>
             </div>
@@ -839,61 +905,145 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
         </div>
       )}
 
-      {/* B. LIVE CLASSROOM STREAM PLAYER */}
+      {/* B. LIVE CLASSROOM OR LIVE CLASS LIST */}
       {view === 'live' && (
-        <div className="animate-fade-in">
-          <button onClick={() => setView('home')} className="btn-outline-new" style={{ marginBottom: '16px', padding: '6px 12px' }}>
-            <span className="glyphicon glyphicon-arrow-left"></span> Back to Dashboard
-          </button>
-
-          <div className="row">
-            <div className="col-md-8">
-              {/* Video Presentation */}
-              <div className="panel-card-new" style={{ padding: 0, overflow: 'hidden', marginBottom: '16px' }}>
-                <div className="panel-header-new" style={{ padding: '12px 20px', margin: 0, backgroundColor: '#002e5b', color: 'white' }}>
-                  <h3 className="panel-title-new" style={{ color: 'white' }}>
-                    <span className="glyphicon glyphicon-facetime-video"></span> Ongoing Lecture Presentation
-                  </h3>
-                  <span className="badge-red-pill">● LIVE</span>
-                </div>
-                
-                <div style={{ backgroundColor: '#0f172a', aspectRatio: '1.6', display: 'flex', alignItems: 'center', justify: 'center', position: 'relative' }}>
-                  <div style={{ width: '80%', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '24px', color: 'white' }}>
-                    <span style={{ fontSize: '11px', color: '#fecd0b', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>Slide Presentation</span>
-                    <h3 style={{ margin: '8px 0 16px 0', fontFamily: 'Outfit' }}>VidyastraAI Smart Teaching Room</h3>
-                    
-                    <div style={{ backgroundColor: '#020617', borderRadius: '6px', padding: '16px', fontSize: '13px', fontFamily: 'monospace', color: '#94a3b8', lineHeight: '1.6', borderLeft: '3px solid #3b82f6' }}>
-                      {"// Smart whiteboard simulated content"}<br />
-                      {"const [topic, setTopic] = useState(\"VidyastraAI Redesign\");"}<br />
-                      {"console.log(`Currently learning: ${topic}`);"}
-                    </div>
-                  </div>
-                  
-                  <div style={{ position: 'absolute', bottom: '15px', left: '15px', backgroundColor: 'rgba(0,0,0,0.5)', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', color: '#cbd5e1' }}>
-                    📚 NIT JALANDHAR CLASSROOM E-PORTAL
-                  </div>
-                </div>
-              </div>
-
-              {/* Scrolling Captions Bar */}
-              <div className="panel-card-new" style={{ padding: '12px 18px', borderLeft: '4px solid #3b82f6' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span className="badge-live-pill" style={{ backgroundColor: '#2563eb' }}>CAPTION</span>
-                  <span style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>
-                    {transcript.length > 0 ? transcript[transcript.length - 1].text : 'Waiting for instructor speech...'}
-                  </span>
-                </div>
+        selectedLiveClass === null ? (
+          <div className="animate-fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+              <div>
+                <h2 className="erp-page-title" style={{ margin: 0, paddingBottom: 0, borderBottom: 'none' }}>
+                  <span className="glyphicon glyphicon-facetime-video"></span> Live Classes Portal
+                </h2>
+                <p style={{ color: '#6b7280', fontSize: '13px', margin: '4px 0 0 0' }}>
+                  Real-time interactive virtual classrooms currently broadcasting.
+                </p>
               </div>
             </div>
 
-            {/* Transcripts lists */}
-            <div className="col-md-4">
-              <div className="panel-card-new" style={{ height: '420px' }}>
-                <div className="panel-header-new">
-                  <h2 className="panel-title-new">
-                    <span className="glyphicon glyphicon-comment"></span> Live Captions Log
-                  </h2>
+            <div className="row">
+              {liveClasses.map((c) => (
+                <div key={c.id} className="col-md-6" style={{ marginBottom: '20px' }}>
+                  <div className="panel-card-new" style={{ minHeight: '260px', position: 'relative', borderLeft: '4px solid #16a34a', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                    <div style={{ position: 'absolute', top: '18px', right: '18px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className="pulse-dot-live" style={{ backgroundColor: '#ef4444' }}></span>
+                      <span className="badge-red-pill" style={{ backgroundColor: '#ef4444', margin: 0, padding: '3px 8px' }}>● LIVE</span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                      <div className="subject-circle-initial subj-color-blue" style={{ width: '44px', height: '44px', fontSize: '16px', fontWeight: 'bold', flexShrink: 0 }}>
+                        {c.subject.split(' ').map(w => w[0]).join('')}
+                      </div>
+                      <div style={{ paddingRight: '70px' }}>
+                        <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700', textTransform: 'uppercase', display: 'block', letterSpacing: '0.5px' }}>{c.startTime}</span>
+                        <h3 style={{ margin: '4px 0 2px 0', fontSize: '17px', fontWeight: 'bold', color: '#002e5b' }}>{c.subject}</h3>
+                        <p style={{ margin: 0, fontSize: '12px', fontWeight: '600', color: '#16a34a' }}>Topic: {c.topic}</p>
+                      </div>
+                    </div>
+
+                    <div style={{ backgroundColor: '#f8fafc', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 10px', fontSize: '12px', border: '1px solid #f1f5f9' }}>
+                      <div>
+                        <span style={{ color: '#6b7280', display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>Instructor</span>
+                        <strong style={{ color: '#1f2937' }}>{c.teacher}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#6b7280', display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>Location</span>
+                        <strong style={{ color: '#1f2937' }}>{c.room}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#6b7280', display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>Elapsed Time</span>
+                        <strong style={{ color: '#1f2937' }}>{c.duration}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#6b7280', display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>Attendance</span>
+                        <strong style={{ color: '#2563eb' }}>{c.studentsJoined} students online</strong>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        setSelectedLiveClass(c);
+                        triggerToast(`Joined classroom: ${c.subject}`);
+                      }} 
+                      className="btn-solid-new" 
+                      style={{ width: '100%', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: 'auto' }}
+                    >
+                      <span className="glyphicon glyphicon-log-in"></span> Join Classroom
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="animate-fade-in">
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+              <button onClick={() => setSelectedLiveClass(null)} className="btn-outline-new" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="glyphicon glyphicon-arrow-left"></span> Leave Class
+              </button>
+              <button onClick={() => setView('home')} className="btn-outline-new" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="glyphicon glyphicon-home"></span> Dashboard Home
+              </button>
+            </div>
+
+            <div className="row">
+              <div className="col-md-8">
+                {/* Video Presentation */}
+                <div className="panel-card-new" style={{ padding: 0, overflow: 'hidden', marginBottom: '16px' }}>
+                  <div className="panel-header-new" style={{ padding: '12px 20px', margin: 0, backgroundColor: '#002e5b', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 className="panel-title-new" style={{ color: 'white', margin: 0 }}>
+                      <span className="glyphicon glyphicon-facetime-video"></span> Live stream: {selectedLiveClass.subject} ({selectedLiveClass.room})
+                    </h3>
+                    <span className="badge-red-pill">● LIVE</span>
+                  </div>
+                  
+                  <div style={{ backgroundColor: '#0f172a', aspectRatio: '1.6', display: 'flex', alignItems: 'center', justify: 'center', position: 'relative' }}>
+                    <div style={{ width: '80%', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '24px', color: 'white' }}>
+                      <span style={{ fontSize: '11px', color: '#fecd0b', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>{selectedLiveClass.subject} • {selectedLiveClass.teacher}</span>
+                      <h3 style={{ margin: '8px 0 16px 0', fontFamily: 'Outfit' }}>Topic: {selectedLiveClass.topic}</h3>
+                      
+                      <div style={{ backgroundColor: '#020617', borderRadius: '6px', padding: '16px', fontSize: '13px', fontFamily: 'monospace', color: '#94a3b8', lineHeight: '1.6', borderLeft: '3px solid #3b82f6' }}>
+                        {"// Live whiteboard classroom session contents"}<br />
+                        {selectedLiveClass.id === 2 ? (
+                          <>
+                            {"const [topic, setTopic] = useState(\"React Hooks\");"}<br />
+                            {"console.log(`Currently teaching: ${topic}`);"}<br />
+                            {"// useState & useEffect live demo"}
+                          </>
+                        ) : (
+                          <>
+                            {"class Node { constructor(data) { this.data = data; this.next = null; } }"}<br />
+                            {"class LinkedList { constructor() { this.head = null; } }"}<br />
+                            {"// Arrays vs Linked Lists comparison demo"}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div style={{ position: 'absolute', bottom: '15px', left: '15px', backgroundColor: 'rgba(0,0,0,0.5)', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', color: '#cbd5e1' }}>
+                      📚 NIT JALANDHAR CLASSROOM E-PORTAL
+                    </div>
+                  </div>
+                </div>
+
+                {/* Scrolling Captions Bar */}
+                <div className="panel-card-new" style={{ padding: '12px 18px', borderLeft: '4px solid #3b82f6' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span className="badge-live-pill" style={{ backgroundColor: '#2563eb' }}>CAPTION</span>
+                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>
+                      {transcript.length > 0 ? transcript[transcript.length - 1].text : 'Waiting for instructor speech...'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transcripts lists */}
+              <div className="col-md-4">
+                <div className="panel-card-new" style={{ height: '420px' }}>
+                  <div className="panel-header-new">
+                    <h2 className="panel-title-new">
+                      <span className="glyphicon glyphicon-comment"></span> Live Captions Log
+                    </h2>
+                  </div>
                 <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
                   {transcript.length === 0 ? (
                     <div style={{ color: '#9ca3af', textAlign: 'center', padding: '40px 0', fontSize: '12px' }}>
@@ -912,7 +1062,8 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
             </div>
           </div>
         </div>
-      )}
+      )
+    )}
 
       {/* C. RECORDED LECTURES */}
       {view === 'recorded' && (
