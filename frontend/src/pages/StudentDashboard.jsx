@@ -1,1287 +1,2046 @@
-import React, { useState, useEffect } from 'react';
-import DashboardLayout from '../components/DashboardLayout';
-import StatCard from '../components/StatCard';
+import { useState, useEffect, useRef } from 'react';
+import { 
+  GraduationCap, 
+  LayoutDashboard, 
+  BookOpen, 
+  Video, 
+  FileText, 
+  Award, 
+  ClipboardList, 
+  MessageSquare, 
+  BarChart2, 
+  Bell, 
+  Settings, 
+  LogOut, 
+  Play, 
+  Check, 
+  Download, 
+  Send, 
+  Sparkles,
+  Menu,
+  X,
+  Clock,
+  TrendingUp,
+  BookOpenCheck,
+  AlertCircle
+} from 'lucide-react';
 
-const StudentDashboard = ({ user, onLogout, onNavigate }) => {
-  const [view, setView] = useState('home'); // home (Dashboard), live (Live Classes), recorded, notes, quiz (Quiz & Results), attendance, announcements
-  const [transcript, setTranscript] = useState([]);
-  const [isLive, setIsLive] = useState(true);
-
-  // Live classes and interactive selection state
-  const [selectedLiveClass, setSelectedLiveClass] = useState(null);
-  const [liveClasses, setLiveClasses] = useState([
-    {
-      id: 1,
-      subject: 'Data Structures',
-      teacher: 'Dr. Sarah Verma',
-      topic: 'Arrays and Linked Lists',
-      startTime: '09:00 AM - 10:00 AM',
-      room: 'LHC-102',
-      duration: '45 mins elapsed',
-      studentsJoined: 42,
-      status: 'Live'
-    },
-    {
-      id: 2,
-      subject: 'Web Development',
-      teacher: 'Dr. Sarah Verma',
-      topic: 'React Hooks: useState & useEffect',
-      startTime: '10:15 AM - 11:15 AM',
-      room: 'LHC-204',
-      duration: '10 mins elapsed',
-      studentsJoined: 38,
-      status: 'Live'
-    }
-  ]);
-
-  const handleTabChange = (newTab) => {
-    setView(newTab);
-    if (newTab === 'live') {
-      setSelectedLiveClass(null);
-    }
-  };
-
-  // Quiz state
-  const [liveQuiz, setLiveQuiz] = useState(null);
-  const [quizTimer, setQuizTimer] = useState(15);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [quizSubmitted, setQuizSubmitted] = useState(false);
-  const [quizFeedback, setQuizFeedback] = useState('');
-  const [score, setScore] = useState(0);
-
-  // Notes
-  const [studentNotes, setStudentNotes] = useState('');
-  const [aiSummary, setAiSummary] = useState('');
-  const [showSummaryModal, setShowSummaryModal] = useState(false);
-
-  // Filter Dropdowns
-  const [deptFilter, setDeptFilter] = useState('Computer Science & Engineering');
-  const [semFilter, setSemFilter] = useState('2nd Semester');
-  const [secFilter, setSecFilter] = useState('CSE - A');
-
-  const [toastMessage, setToastMessage] = useState('');
-
-  // Attendance records Mock
-  const [attendancePercent, setAttendancePercent] = useState(92);
-  const [attendanceLog] = useState([
-    { date: '12 Jun 2026', subject: 'Web Development', status: 'Present' },
-    { date: '11 Jun 2026', subject: 'Data Structures', status: 'Present' },
-    { date: '10 Jun 2026', subject: 'Mathematics III', status: 'Absent' },
-    { date: '09 Jun 2026', subject: 'Database Management System', status: 'Present' },
-    { date: '08 Jun 2026', subject: 'Computer Organization', status: 'Present' }
-  ]);
+const StudentDashboard = ({ user, onLogout }) => {
+  // Navigation & UI Layout State
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [toast, setToast] = useState(null);
 
   // Toast helper
-  const triggerToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 4000);
+  const triggerToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
   };
 
-  // Listen for quiz events + simulate transcript captions
-  useEffect(() => {
-    const handleQuiz = (e) => {
-      setLiveQuiz(e.detail);
-      setQuizTimer(15);
-      setSelectedOption(null);
+  // Mock Profile Info
+  const [profile, setProfile] = useState({
+    name: user?.name || 'Rohan Sharma',
+    rollNo: '2026CSE1045',
+    email: 'rohan.sharma@vidyastra.ai',
+    degree: 'B.Tech Computer Science & Engineering',
+    semester: '4th Semester',
+    avatarColor: 'from-indigo-500 to-blue-600',
+    phone: '+91 98765 43210',
+    studyGoal: 'Full-Stack Developer & AI Enthusiast',
+    studyTime: 'Night Owl (8 PM - 12 AM)',
+    emailAlerts: true,
+    smsAlerts: false,
+    darkModeMock: false
+  });
+
+  // Notifications State
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "Assignment 4: SQL Practice Set is now open.", time: "10 mins ago", read: false },
+    { id: 2, text: "Dr. Sarah Verma scheduled an extra session for DSA tomorrow.", time: "2 hrs ago", read: false },
+    { id: 3, text: "Your OS: Custom Shell Scripting assignment has been submitted.", time: "1 day ago", read: true },
+    { id: 4, text: "New lecture added: OSI Layer Protocols.", time: "2 days ago", read: true },
+    { id: 5, text: "AI generated a new study summary for DBMS Normalization.", time: "3 days ago", read: true }
+  ]);
+
+  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+
+  const markAllNotificationsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    triggerToast("All notifications marked as read!");
+  };
+
+  // Lecture Library State
+  const [lectures, setLectures] = useState([
+    { id: 1, topic: 'Introduction to React Hooks', subject: 'DSA', duration: '45 mins', date: '2026-06-08', watched: true },
+    { id: 2, topic: 'Arrays and Linked Lists', subject: 'DSA', duration: '52 mins', date: '2026-06-09', watched: true },
+    { id: 3, topic: 'Binary Search Trees & Operations', subject: 'DSA', duration: '58 mins', date: '2026-06-11', watched: true },
+    { id: 4, topic: 'Graph Traversals (BFS & DFS)', subject: 'DSA', duration: '50 mins', date: '2026-06-14', watched: false },
+    { id: 5, topic: 'Introduction to DBMS & Architecture', subject: 'DBMS', duration: '40 mins', date: '2026-06-05', watched: true },
+    { id: 6, topic: 'Entity-Relationship Models', subject: 'DBMS', duration: '55 mins', date: '2026-06-07', watched: true },
+    { id: 7, topic: 'Relational Algebra Concepts', subject: 'DBMS', duration: '48 mins', date: '2026-06-10', watched: true },
+    { id: 8, topic: 'SQL Joins and Subqueries', subject: 'DBMS', duration: '60 mins', date: '2026-06-13', watched: false },
+    { id: 9, topic: 'Processes, Threads & Concurrency', subject: 'OS', duration: '51 mins', date: '2026-06-04', watched: true },
+    { id: 10, topic: 'CPU Scheduling Algorithms', subject: 'OS', duration: '59 mins', date: '2026-06-12', watched: false },
+    { id: 11, topic: 'Introduction to Computer Networks', subject: 'CN', duration: '42 mins', date: '2026-06-03', watched: true },
+    { id: 12, topic: 'OSI & TCP/IP Layer Models', subject: 'CN', duration: '56 mins', date: '2026-06-12', watched: false }
+  ]);
+
+  const [lectureSearch, setLectureSearch] = useState('');
+  const [lectureFilter, setLectureFilter] = useState('All');
+
+  const toggleLectureWatched = (id) => {
+    setLectures(prev => prev.map(l => {
+      if (l.id === id) {
+        const nextState = !l.watched;
+        triggerToast(`Marked "${l.topic}" as ${nextState ? 'Watched' : 'Unwatched'}`);
+        return { ...l, watched: nextState };
+      }
+      return l;
+    }));
+  };
+
+  // Compute stats in real-time
+  const watchedLecturesCount = lectures.filter(l => l.watched).length;
+  const lectureProgressPercent = Math.round((watchedLecturesCount / lectures.length) * 100);
+
+  // My Courses state & data
+  const [courses] = useState([
+    { code: 'CS201', name: 'Data Structures & Algorithms', progress: 75, instructor: 'Dr. Sarah Verma', bgGradient: 'from-blue-500 to-indigo-600', codeColor: 'text-indigo-600', category: 'DSA' },
+    { code: 'CS202', name: 'Database Management Systems', progress: 60, instructor: 'Dr. Sarah Verma', bgGradient: 'from-purple-500 to-pink-600', codeColor: 'text-purple-600', category: 'DBMS' },
+    { code: 'CS203', name: 'Operating Systems', progress: 40, instructor: 'Dr. Amit Singh', bgGradient: 'from-amber-500 to-orange-600', codeColor: 'text-amber-600', category: 'OS' },
+    { code: 'CS204', name: 'Computer Networks', progress: 20, instructor: 'Dr. Neha Gupta', bgGradient: 'from-emerald-500 to-teal-600', codeColor: 'text-emerald-600', category: 'CN' }
+  ]);
+
+  // AI Notes State
+  const [notes] = useState([
+    { id: 1, title: 'Binary Tree Traversals Guide', subject: 'DSA', date: '2026-06-12', tags: ['#trees', '#dfs-bfs'], summary: 'Covers Inorder, Preorder, and Postorder recursive algorithms. Includes iterative stack-based DFS and queue-based BFS queue implementations. Highly critical for coding interviews.' },
+    { id: 2, title: 'Normalization & Normal Forms Cheat Sheet', subject: 'DBMS', date: '2026-06-10', tags: ['#normalization', '#sql'], summary: 'Step-by-step resolution from 1NF, 2NF, 3NF, up to BCNF. Explains dependencies, prime attributes, and lossless decompositions.' },
+    { id: 3, title: 'CPU Scheduling Algorithms Overview', subject: 'OS', date: '2026-06-08', tags: ['#scheduling', '#cpu'], summary: 'Comparative analysis of FCFS, SJF, SRTF, Round Robin, and Priority Scheduling. Formulates Gantt chart drawing and turnaround/waiting time computation.' },
+    { id: 4, title: 'Subnetting & IP Addressing Guide', subject: 'CN', date: '2026-06-05', tags: ['#ip-addressing', '#subnets'], summary: 'Visual guide to IPv4 network masking, CIDR notation class subdivisions, and calculating hosting subnet ranges. Demystifies variable-length subnet masking (VLSM).' }
+  ]);
+
+  const [expandedNoteId, setExpandedNoteId] = useState(null);
+
+  const handleDownloadNote = (title) => {
+    triggerToast(`Initializing AI packaging...`);
+    setTimeout(() => {
+      // Mock note file download
+      const textContent = `# Study Guide: ${title}\n\nGenerated by Vidyastra AI\nDate: ${new Date().toLocaleDateString()}\n\nKey Concepts:\n1. Core Definitions\n2. Implementation Details\n3. Examples & Practice Tasks\n\nStudy hard!`;
+      const blob = new Blob([textContent], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_notes.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      triggerToast(`Successfully downloaded notes!`);
+    }, 1200);
+  };
+
+  // AI Quiz State
+  const [practiceQuizzes] = useState([
+    { id: 1, title: 'DBMS Normalization Practice', subject: 'DBMS', questions: 10, difficulty: 'Medium', taken: false },
+    { id: 2, title: 'Binary Search Trees & AVL Trees', subject: 'DSA', questions: 10, difficulty: 'Medium', taken: true, prevScore: '80%' },
+    { id: 3, title: 'OS Process Synchronization & Semaphores', subject: 'OS', questions: 10, difficulty: 'Hard', taken: false }
+  ]);
+
+  const [quizScorePoints, setQuizScorePoints] = useState(240);
+  const [aiQuizActive, setAiQuizActive] = useState(false);
+  const [quizTopic, setQuizTopic] = useState('DSA');
+  const [quizDifficulty, setQuizDifficulty] = useState('Medium');
+  const [quizGenerating, setQuizGenerating] = useState(false);
+
+  // Simulated AI Quiz Questions Database
+  const mockQuizQuestionsDB = {
+    DSA: [
+      {
+        question: "What is the time complexity of searching in a balanced AVL tree in the worst case?",
+        options: ["O(1)", "O(n)", "O(log n)", "O(n log n)"],
+        correct: 2,
+        explanation: "Since an AVL tree is strictly balanced (the difference in heights of left and right subtrees is at most 1), the height of the tree is bounded by O(log n), ensuring lookup is O(log n)."
+      },
+      {
+        question: "Which data structure is primarily used to implement Breadth-First Search (BFS)?",
+        options: ["Stack", "Queue", "Priority Queue", "Heap"],
+        correct: 1,
+        explanation: "BFS explores vertices level-by-level. A FIFO Queue is ideal for keeping track of the nodes to visit next in order."
+      },
+      {
+        question: "What is the space complexity of quicksort in the worst case (assuming recursive stack space)?",
+        options: ["O(1)", "O(log n)", "O(n)", "O(n^2)"],
+        correct: 2,
+        explanation: "In the worst case, the partition pivot is always the smallest or largest element, leading to n recursive calls and hence O(n) space complexity on the stack."
+      }
+    ],
+    DBMS: [
+      {
+        question: "Which normal form requires resolving partial functional dependencies?",
+        options: ["1NF", "2NF", "3NF", "BCNF"],
+        correct: 1,
+        explanation: "Second Normal Form (2NF) requires that the table is in 1NF and no non-prime attribute is functionally dependent on any proper subset of any candidate key (partial dependency)."
+      },
+      {
+        question: "What does the 'A' stand for in ACID properties of transaction management?",
+        options: ["Availability", "Atomicity", "Association", "Agreement"],
+        correct: 1,
+        explanation: "Atomicity ensures that all operations within a transaction are completed successfully; otherwise, the transaction is completely aborted."
+      },
+      {
+        question: "Which join returns all rows from the left table, and matching rows from the right table?",
+        options: ["Inner Join", "Full Join", "Left Outer Join", "Right Outer Join"],
+        correct: 2,
+        explanation: "Left Outer Join returns all rows from the left table, with nulls filled in for columns of the right table where no match exists."
+      }
+    ],
+    OS: [
+      {
+        question: "What is the primary purpose of a Semaphore in Operating Systems?",
+        options: ["Memory paging", "Process scheduling", "Process synchronization & mutual exclusion", "Disk partition mapping"],
+        correct: 2,
+        explanation: "Semaphores are integer variables used as synchronization tools to control access to shared resources in concurrent computing environments."
+      },
+      {
+        question: "Which CPU scheduling algorithm can lead to starvation?",
+        options: ["Round Robin", "First-Come First-Served", "Shortest Job First (SJF)", "None of the above"],
+        correct: 2,
+        explanation: "SJF can starve longer processes if shorter processes continually arrive, as it always prioritizes the shortest execution time."
+      },
+      {
+        question: "What condition is NOT required for a deadlock to occur?",
+        options: ["Mutual Exclusion", "No Preemption", "Hold and Wait", "Preemption of resources"],
+        correct: 3,
+        explanation: "The four Coffman conditions are Mutual Exclusion, Hold & Wait, No Preemption, and Circular Wait. Preemption breaks deadlocks."
+      }
+    ],
+    CN: [
+      {
+        question: "Which layer of the OSI model handles packet routing and logical IP addressing?",
+        options: ["Physical Layer", "Data Link Layer", "Network Layer", "Transport Layer"],
+        correct: 2,
+        explanation: "The Network Layer is responsible for packet forwarding, routing, and logical network addressing (IPv4/IPv6)."
+      },
+      {
+        question: "What is the standard port number for HTTPS traffic?",
+        options: ["80", "443", "8080", "22"],
+        correct: 1,
+        explanation: "Port 443 is the standard port used for secure HTTP (HTTPS) communication."
+      },
+      {
+        question: "Which routing protocol uses the link-state routing algorithm?",
+        options: ["RIP", "OSPF", "BGP", "EIGRP"],
+        correct: 1,
+        explanation: "OSPF (Open Shortest Path First) is a Link-State routing protocol, whereas RIP is distance-vector."
+      }
+    ]
+  };
+
+  const [activeQuizQuestions, setActiveQuizQuestions] = useState([]);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizScore, setQuizScore] = useState(0);
+
+  const startAiQuizGeneration = () => {
+    setQuizGenerating(true);
+    setTimeout(() => {
+      const db = mockQuizQuestionsDB[quizTopic] || mockQuizQuestionsDB['DSA'];
+      setActiveQuizQuestions(db);
+      setSelectedAnswers({});
       setQuizSubmitted(false);
-      setQuizFeedback('');
-      triggerToast("⚠️ NEW LIVE QUIZ HAS BEEN PUSHED! Click to answer.");
-      
-      // Auto-join the Web Dev class (since that is where the quiz is pushed from)
-      const webDevClass = liveClasses.find(c => c.id === 2);
-      setSelectedLiveClass(webDevClass || liveClasses[0]);
-      setView('live'); // Redirect to live view to answer!
-    };
-    window.addEventListener('new-live-quiz', handleQuiz);
+      setQuizScore(0);
+      setQuizGenerating(false);
+      setAiQuizActive(true);
+      triggerToast(`AI generated a customized ${quizDifficulty} quiz on ${quizTopic}! ✦`);
+    }, 1500);
+  };
 
-    let idx = 0;
-    const lines = [
-      "Today we'll discuss modern web development patterns.",
-      "Hooks allow state management in functional components.",
-      "useState returns an array with the current value and a setter.",
-      "useEffect runs code after every render, useful for API calls.",
-      "Always declare hooks at the top level of your component.",
-      "Let's check your understanding with a quick quiz!"
-    ];
-    const interval = setInterval(() => {
-      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      setTranscript(prev => [...prev, { time, text: lines[idx % lines.length] }]);
-      idx++;
-    }, 7000);
+  const selectAnswer = (questionIndex, optionIndex) => {
+    if (quizSubmitted) return;
+    setSelectedAnswers(prev => ({
+      ...prev,
+      [questionIndex]: optionIndex
+    }));
+  };
 
-    return () => {
-      window.removeEventListener('new-live-quiz', handleQuiz);
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Quiz countdown timer
-  useEffect(() => {
-    if (liveQuiz && quizTimer > 0 && !quizSubmitted) {
-      const t = setTimeout(() => setQuizTimer(quizTimer - 1), 1000);
-      return () => clearTimeout(t);
+  const handleSubmitQuiz = () => {
+    if (Object.keys(selectedAnswers).length < activeQuizQuestions.length) {
+      alert("Please answer all questions before submitting!");
+      return;
     }
-    if (quizTimer === 0 && !quizSubmitted) {
-      submitQuiz();
-    }
-  }, [liveQuiz, quizTimer, quizSubmitted]);
-
-  const submitQuiz = () => {
+    let correctCount = 0;
+    activeQuizQuestions.forEach((q, idx) => {
+      if (selectedAnswers[idx] === q.correct) {
+        correctCount++;
+      }
+    });
+    const pointsGained = correctCount * 20;
+    setQuizScore(correctCount);
+    setQuizScorePoints(prev => prev + pointsGained);
     setQuizSubmitted(true);
-    if (selectedOption === null) {
-      setQuizFeedback("Time's up! No answer selected.");
-      triggerToast("Time's up! Quiz expired.");
+    triggerToast(`Quiz Submitted! Correct answers: ${correctCount}/${activeQuizQuestions.length}. Gained ${pointsGained} pts! 🎉`);
+  };
+
+  // Assignments State
+  const [assignments, setAssignments] = useState([
+    { id: 1, title: 'Red-Black Trees Implementation', subject: 'DSA', dueDate: '2026-06-18', points: 100, status: 'Pending' },
+    { id: 2, title: 'SQL Practice Set - Joins & Indexes', subject: 'DBMS', dueDate: '2026-06-20', points: 50, status: 'Pending' },
+    { id: 3, title: 'Custom Shell Scripting & Pointers', subject: 'OS', dueDate: '2026-06-14', points: 80, status: 'Submitted' },
+    { id: 4, title: 'IP Addressing Class Subnetting', subject: 'CN', dueDate: '2026-06-11', points: 60, status: 'Graded', grade: 'A (55/60)' }
+  ]);
+
+  const [activeAssignmentSubmit, setActiveAssignmentSubmit] = useState(null);
+  const [submissionText, setSubmissionText] = useState('');
+
+  const submitAssignmentAction = () => {
+    if (!submissionText.trim()) {
+      alert("Please write or paste your assignment solution before submitting!");
       return;
     }
-    const correct = selectedOption === liveQuiz.correctIndex;
-    if (correct) {
-      setScore(s => s + 10);
-      setQuizFeedback(`✓ Correct! +10 pts. ${liveQuiz.explanation}`);
-      triggerToast("🎉 Correct Answer! +10 points added.");
-    } else {
-      setQuizFeedback(`✗ Incorrect. Answer was ${['A', 'B', 'C', 'D'][liveQuiz.correctIndex]}. ${liveQuiz.explanation}`);
-      triggerToast("✗ Incorrect Answer. Try again next time!");
-    }
+    setAssignments(prev => prev.map(a => {
+      if (a.id === activeAssignmentSubmit.id) {
+        return { ...a, status: 'Submitted' };
+      }
+      return a;
+    }));
+    triggerToast(`Assignment "${activeAssignmentSubmit.title}" submitted successfully! 🚀`);
+    setActiveAssignmentSubmit(null);
+    setSubmissionText('');
   };
 
-  const generateAiNotes = () => {
-    if (transcript.length === 0) {
-      alert('No lecture content yet! Attend live classes to gather notes.');
-      return;
-    }
-    const text = transcript.map(l => l.text).join(' ').toLowerCase();
-    let s = `# AI Study Notes\n*Generated for ${user?.name || "Rohan Sharma"} on ${new Date().toLocaleDateString()}*\n\n`;
-    s += `## Key Concepts\n`;
-    if (text.includes('hook') || text.includes('state')) {
-      s += `- **useState**: Returns [currentValue, setter] for managing component state\n`;
-      s += `- **useEffect**: Runs side-effects after render (API calls, timers)\n`;
-      s += `- **Rules of Hooks**: Must be called at top level, only in React functions\n`;
-    } else {
-      s += `- **Introduction**: Conceptual breakdown of core principles\n`;
-      s += `- **Deployment**: Lifecycle execution parameters\n`;
-    }
-    s += `\n## Summary\n`;
-    s += `This lecture covered essential components, focusing on correct setup, structure, and lifecycle flows. Ensure variables are scoped and logic is checked.\n`;
-    s += `\n## Quick Review\n`;
-    s += `1. Identify the core principles discussed today.\n`;
-    s += `2. What are the key rules for proper implementation?\n`;
-    setAiSummary(s);
-    setShowSummaryModal(true);
-  };
+  // AI Tutor State & Ref
+  const [chatMessages, setChatMessages] = useState([
+    { sender: 'ai', text: "Hello Rohan! I am your Vidyastra AI Tutor. ✦\nI see you're working through computer architecture and algorithm complexity today. Let's study the complexity of **Binary Search**. Do you have any questions on how it operates, why it is efficient, or its best/worst-case parameters?", time: "11:30 AM" }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [aiTyping, setAiTyping] = useState(false);
+  const chatBottomRef = useRef(null);
 
-  const downloadNotes = () => {
-    const blob = new Blob([aiSummary], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'VidyastraAI_StudyNotes.md';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    triggerToast("Notes downloaded successfully!");
-  };
-
-  const sidebarItems = [
-    { id: 'home', label: 'Dashboard', icon: 'glyphicon-home' },
-    { id: 'live', label: 'Live Classes', icon: 'glyphicon-facetime-video' },
-    { id: 'recorded', label: 'Recorded Lectures', icon: 'glyphicon-film' },
-    { id: 'notes', label: 'My Notes', icon: 'glyphicon-pencil' },
-    { id: 'quiz', label: 'Quiz & Results', icon: 'glyphicon-check' },
-    { id: 'attendance', label: 'Attendance', icon: 'glyphicon-calendar' },
-    { id: 'announcements', label: 'Announcements', icon: 'glyphicon-bullhorn' }
+  const tutorSuggestions = [
+    { label: "Why is Binary Search O(log n)?", response: "Binary Search operates using a **divide-and-conquer** approach. At each step, it compares the target with the middle element and discards exactly half of the search range. \n\nMathematically, the range size shrinks as: \n$N \\rightarrow N/2 \\rightarrow N/4 \\rightarrow \\dots \\rightarrow 1$. \n\nThis division takes $k$ steps where $N / 2^k = 1$, which solves to $k = \\log_2 N$. Hence, the time complexity is logarithmic: **O(log n)**!" },
+    { label: "Can it work on unsorted arrays?", response: "No, Binary Search **strictly requires a sorted array**. \n\nThe sorting order is what allows the algorithm to deterministically decide whether the target is in the left half or right half of the range. If the array is unsorted, there is no guarantee that elements to the left are smaller or elements to the right are larger, making the division step impossible." },
+    { label: "What is its space complexity?", response: "It depends on whether you implement it iteratively or recursively:\n\n1. **Iterative Implementation**: Space complexity is **O(1)**. It only uses a few pointers (`low`, `high`, `mid`) to search the array without using extra stack allocations.\n2. **Recursive Implementation**: Space complexity is **O(log n)**. Each recursive call consumes space on the call stack. Since the depth of recursion is bounded by $\\log n$, it uses O(log n) stack frames." },
+    { label: "Show JavaScript code for it", response: "Here is a clean, iterative implementation of Binary Search in JavaScript:\n\n```javascript\nfunction binarySearch(arr, target) {\n  let low = 0;\n  let high = arr.length - 1;\n\n  while (low <= high) {\n    let mid = Math.floor((low + high) / 2);\n\n    if (arr[mid] === target) {\n      return mid; // Target found, return index\n    } else if (arr[mid] < target) {\n      low = mid + 1; // Discard left half\n    } else {\n      high = mid - 1; // Discard right half\n    }\n  }\n  return -1; // Target not found\n}\n```" }
   ];
 
-  const notifications = [
-    { text: "New Live Class: Dr. Sarah Verma started Web Development.", tab: "live" },
-    { text: "Study Materials: SQL slides uploaded.", tab: "notes" },
-    { text: "Grade updated: Mathematics midterm marks out.", tab: "quiz" }
-  ];
+  const scrollChatToBottom = () => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollChatToBottom();
+  }, [chatMessages, aiTyping]);
+
+  const handleSendChatMessage = (textToSend) => {
+    if (!textToSend.trim()) return;
+
+    // Add user message
+    const formattedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userMsg = { sender: 'user', text: textToSend, time: formattedTime };
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+
+    // Trigger typing state
+    setAiTyping(true);
+
+    setTimeout(() => {
+      // Find matches in suggestions or use generic reply
+      const matchedSuggestion = tutorSuggestions.find(s => s.label === textToSend);
+      let replyText = "";
+
+      if (matchedSuggestion) {
+        replyText = matchedSuggestion.response;
+      } else {
+        replyText = `That's an interesting question about "${textToSend}"! Under standard Binary Search parameters, let me explain. Always remember that Binary Search is highly optimized for fast lookups. Do you have any questions on how it compares to Linear Search O(n) or how we can implement it recursively?`;
+      }
+
+      setChatMessages(prev => [...prev, {
+        sender: 'ai',
+        text: replyText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+      setAiTyping(false);
+    }, 1200);
+  };
+
+  // Settings Save Handler
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    triggerToast("Updating profile & settings...");
+    setTimeout(() => {
+      triggerToast("Settings saved successfully!", 'success');
+    }, 1000);
+  };
 
   return (
-    <DashboardLayout
-      user={user}
-      onLogout={onLogout}
-      activeTab={view}
-      onTabChange={handleTabChange}
-      sidebarItems={sidebarItems}
-      dashboardTitle="Student Dashboard"
-      roleLabel="B.Tech CSE"
-      roleBadgeClass="student"
-      notificationCount={3}
-      notifications={notifications}
-    >
-      {/* Student specific styles */}
+    <div className="vidyastra-container">
+      {/* Global CSS Embedded Styles */}
       <style>{`
-        /* Top Filter Box Row */
-        .filters-inline-row {
+        /* Reset and Base container */
+        .vidyastra-container {
           display: flex;
-          gap: 12px;
-          align-items: center;
-        }
-        .filter-select-wrapper {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background-color: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 6px 12px;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-        }
-        .filter-select-wrapper label {
-          font-size: 10px;
-          font-weight: bold;
-          text-transform: uppercase;
-          color: #6b7280;
-          margin: 0;
-        }
-        .filter-select-inline {
-          border: none;
-          outline: none;
-          font-size: 13px;
-          font-weight: 600;
-          color: #1f2937;
-          background: none;
-          cursor: pointer;
+          min-height: 100vh;
+          font-family: var(--sans-font);
+          background-color: var(--bg);
+          color: var(--text);
+          position: relative;
         }
 
-        /* Grid Panels layout - Triple columns */
-        .panels-grid-3 {
-          display: grid;
-          grid-template-columns: 1.1fr 1fr 1.2fr;
-          gap: 20px;
-          margin-bottom: 24px;
-        }
-        @media (max-width: 992px) {
-          .panels-grid-3 {
-            grid-template-columns: 1fr;
-          }
-        }
-        
-        /* Upcoming lists */
-        .upcoming-row-item {
+        /* Sidebar Styling */
+        .sidebar {
+          width: 260px;
+          background: #0F172A;
+          color: white;
           display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 0;
-          border-bottom: 1px solid #f3f4f6;
+          flex-direction: column;
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 1000;
+          transition: transform 0.3s ease;
+          border-right: 1px solid rgba(255,255,255,0.08);
+          box-shadow: 4px 0 20px rgba(15, 23, 42, 0.15);
         }
-        .upcoming-meta-left {
+
+        .sidebar-brand {
+          padding: 24px 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .brand-logo-circle {
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          background: linear-gradient(135deg, var(--primary) 0%, #6366F1 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .brand-name {
+          font-family: var(--heading-font);
+          font-size: 18px;
+          font-weight: 700;
+          background: linear-gradient(to right, #FFFFFF, #E2E8F0);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          letter-spacing: 0.5px;
+        }
+
+        .sidebar-menu {
+          flex: 1;
+          padding: 24px 12px;
           display: flex;
           flex-direction: column;
           gap: 4px;
-        }
-        .upcoming-time {
-          font-size: 12px;
-          color: #4b5563;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .upcoming-subject {
-          font-size: 14px;
-          font-weight: 700;
-          color: #111827;
-        }
-        .upcoming-teacher {
-          font-size: 11px;
-          color: #6b7280;
-        }
-        .badge-live-pill {
-          background-color: #3b82f6;
-          color: white;
-          font-size: 10px;
-          font-weight: bold;
-          padding: 2px 8px;
-          border-radius: 4px;
-        }
-        .badge-upcoming-pill {
-          background-color: #f3f4f6;
-          color: #2563eb;
-          font-size: 10px;
-          font-weight: bold;
-          padding: 2px 8px;
-          border-radius: 4px;
+          overflow-y: auto;
         }
 
-        /* Pulse Animation for Live Badges */
-        @keyframes pulse-live-indicator {
-          0% { transform: scale(0.92); opacity: 0.6; }
-          50% { transform: scale(1.08); opacity: 1; }
-          100% { transform: scale(0.92); opacity: 0.6; }
-        }
-        .pulse-dot-live {
-          display: inline-block;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background-color: white;
-          margin-right: 4px;
-          animation: pulse-live-indicator 1.8s infinite ease-in-out;
-        }
-        
-        /* Circle Initials Subjects */
-        .subject-roster-item {
+        .menu-item {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 8px 0;
-          border-bottom: 1px solid #f3f4f6;
+          padding: 11px 16px;
+          border-radius: 8px;
+          color: #94A3B8;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          border: none;
+          background: transparent;
+          width: 100%;
+          text-align: left;
         }
-        .subject-circle-initial {
+
+        .menu-item:hover {
+          color: white;
+          background-color: rgba(255,255,255,0.04);
+        }
+
+        .menu-item.active {
+          color: white;
+          background: var(--primary);
+          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+        .sidebar-footer {
+          padding: 20px 12px;
+          border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .logout-btn {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 8px;
+          color: #EF4444;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          width: 100%;
+          background: transparent;
+          border: none;
+        }
+
+        .logout-btn:hover {
+          background-color: rgba(239, 68, 68, 0.08);
+        }
+
+        /* Main Workspace View */
+        .main-workspace {
+          flex: 1;
+          margin-left: 260px;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          background-color: var(--bg);
+          transition: margin-left 0.3s ease;
+        }
+
+        /* Top Header Navigation */
+        .workspace-header {
+          height: 70px;
+          background-color: white;
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 32px;
+          position: sticky;
+          top: 0;
+          z-index: 900;
+        }
+
+        .mobile-menu-toggle {
+          display: none;
+          background: none;
+          border: none;
+          color: var(--text);
+          cursor: pointer;
+          padding: 4px;
+        }
+
+        .header-title {
+          font-family: var(--heading-font);
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--text);
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .bell-trigger {
+          position: relative;
+          cursor: pointer;
+          padding: 8px;
+          border-radius: 50%;
+          transition: background-color var(--transition-fast);
+          border: none;
+          background: none;
+          color: var(--text-muted);
+        }
+
+        .bell-trigger:hover {
+          background-color: #F1F5F9;
+          color: var(--text);
+        }
+
+        .bell-badge {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          background-color: var(--danger);
+          color: white;
+          font-size: 10px;
+          font-weight: bold;
+          border-radius: 50%;
+          width: 16px;
+          height: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid white;
+        }
+
+        .user-avatar-profile {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          cursor: pointer;
+        }
+
+        .avatar-circle-sm {
           width: 36px;
           height: 36px;
           border-radius: 50%;
+          background: linear-gradient(135deg, #4F46E5 0%, #818CF8 100%);
+          color: white;
+          font-weight: 700;
+          font-size: 13px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: 700;
-          font-size: 12px;
-        }
-        .subj-color-blue { background-color: #eff6ff; color: #1d4ed8; }
-        .subj-color-orange { background-color: #fff7ed; color: #c2410c; }
-        .subj-color-purple { background-color: #faf5ff; color: #7e22ce; }
-        .subj-color-green { background-color: #f0fdf4; color: #15803d; }
-        .subj-color-pink { background-color: #fdf2f8; color: #db2777; }
-        
-        /* Links style */
-        .link-blue-new {
-          color: #2563eb;
-          font-size: 12px;
-          font-weight: 600;
-          text-decoration: none;
-          cursor: pointer;
-        }
-        .link-blue-new:hover {
-          text-decoration: underline;
+          box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
         }
 
-        /* Recent lecture rows */
-        .recent-lecture-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 8px 0;
-          border-bottom: 1px solid #f3f4f6;
-        }
-        .recent-left-group {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .play-btn-circle {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background-color: #f3f4f6;
-          color: #002e5b;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          border: none;
-          transition: background-color 0.2s;
-        }
-        .play-btn-circle:hover {
-          background-color: #e5e7eb;
-        }
-        .recent-meta-text {
+        .user-meta-header {
           display: flex;
           flex-direction: column;
         }
-        .recent-title {
-          font-size: 13px;
-          font-weight: bold;
-          color: #1f2937;
-        }
-        .recent-sub {
-          font-size: 11px;
-          color: #6b7280;
-        }
-        
-        /* Large button bottom */
-        .btn-full-browse {
-          background-color: #eff6ff;
-          border: 1px solid #bfdbfe;
-          color: #1d4ed8;
+
+        .user-name-txt {
+          font-size: 14px;
           font-weight: 600;
-          font-size: 13px;
-          padding: 10px;
-          width: 100%;
-          border-radius: 6px;
-          cursor: pointer;
-          text-align: center;
-          margin-top: 10px;
-          transition: background-color 0.2s;
+          color: var(--text);
+        }
+
+        .user-role-txt {
+          font-size: 11px;
+          color: var(--text-muted);
+        }
+
+        /* Workspace Content Scrollable Area */
+        .workspace-content {
+          flex: 1;
+          padding: 32px;
+          overflow-y: auto;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+          .sidebar {
+            transform: translateX(-260px);
+          }
+          .sidebar.open {
+            transform: translateX(0);
+          }
+          .main-workspace {
+            margin-left: 0;
+          }
+          .mobile-menu-toggle {
+            display: block;
+          }
+          .workspace-header {
+            padding: 0 16px;
+          }
+          .workspace-content {
+            padding: 20px 16px;
+          }
+        }
+
+        /* Styled Premium Cards */
+        .gorgeous-card {
+          background-color: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-sm);
+          padding: 24px;
+          transition: all var(--transition-normal);
+        }
+
+        .gorgeous-card:hover {
+          box-shadow: var(--shadow-md);
+        }
+
+        .gradient-banner {
+          background: linear-gradient(135deg, #4F46E5 0%, #312E81 100%);
+          border-radius: var(--radius-md);
+          padding: 24px 32px;
+          color: white;
+          margin-bottom: 24px;
           display: flex;
+          justify-content: space-between;
           align-items: center;
-          justify-content: center;
-          gap: 6px;
+          position: relative;
+          overflow: hidden;
         }
-        .btn-full-browse:hover {
-          background-color: #dbeafe;
+
+        .gradient-banner-bg-sparks {
+          position: absolute;
+          right: -10px;
+          bottom: -20px;
+          opacity: 0.15;
+          width: 240px;
+          height: auto;
+          color: white;
         }
-        
-        /* Grid Panels layout - Double columns bottom */
-        .panels-grid-2 {
+
+        /* Metric Grid */
+        .metrics-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 20px;
           margin-bottom: 24px;
         }
-        @media (max-width: 768px) {
-          .panels-grid-2 {
-            grid-template-columns: 1fr;
-          }
-        }
-        
-        .action-banner-card {
-          border-radius: 12px;
-          padding: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .action-card-left {
+
+        .metric-card-styled {
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 20px;
           display: flex;
           align-items: center;
           gap: 16px;
+          box-shadow: var(--shadow-sm);
+          transition: transform var(--transition-fast), box-shadow var(--transition-fast);
         }
-        .action-card-icon-round {
-          width: 44px;
-          height: 44px;
-          border-radius: 10px;
+
+        .metric-card-styled:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
+        }
+
+        .metric-icon-box {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 20px;
         }
-        .btn-action-solid {
-          border: none;
-          color: white;
-          padding: 8px 16px;
-          border-radius: 6px;
-          font-size: 13px;
-          font-weight: bold;
-          cursor: pointer;
-          transition: opacity 0.2s;
+
+        .metric-value {
+          font-family: var(--heading-font);
+          font-size: 22px;
+          font-weight: 700;
+          color: var(--text);
         }
-        .btn-action-solid:hover {
+
+        .metric-label {
+          font-size: 12px;
+          color: var(--text-muted);
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        /* Subview Specific layouts */
+        .dashboard-main-grid {
+          display: grid;
+          grid-template-columns: 2fr 1.2fr;
+          gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+          .dashboard-main-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        /* Section Headings */
+        .section-header-title {
+          font-family: var(--heading-font);
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--text);
+          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        /* Interactive join button */
+        .btn-join-class {
+          background: linear-gradient(135deg, var(--primary) 0%, #6366F1 100%);
+          color: white;
+          border: none;
+          padding: 6px 14px;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 12px;
+          cursor: pointer;
+          transition: opacity var(--transition-fast);
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .btn-join-class:hover {
           opacity: 0.9;
         }
 
-        /* Overlay Modals */
-        .modal-overlay-new {
+        .btn-upcoming {
+          background-color: #F1F5F9;
+          color: #64748B;
+          border: 1px solid #E2E8F0;
+          padding: 6px 14px;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 12px;
+          cursor: not-allowed;
+        }
+
+        /* Custom Float Toast Alert */
+        .vidyastra-toast {
           position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.5);
-          backdrop-filter: blur(2px);
-          z-index: 1050;
+          bottom: 24px;
+          right: 24px;
+          background-color: #0F172A;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 10px;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+          z-index: 2000;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 14px;
+          font-weight: 500;
+          border-left: 4px solid var(--primary);
+          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .vidyastra-toast.info {
+          border-left-color: var(--info);
+        }
+
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Courses grid styling */
+        .courses-grid-cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 24px;
+        }
+
+        .course-fancy-card {
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          overflow: hidden;
+          box-shadow: var(--shadow-sm);
+          transition: all var(--transition-normal);
+        }
+
+        .course-fancy-card:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .course-fancy-header {
+          padding: 24px;
+          color: white;
+          position: relative;
+        }
+
+        .course-fancy-body {
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .fancy-progress-bar-container {
+          background-color: #F1F5F9;
+          height: 8px;
+          border-radius: 4px;
+          overflow: hidden;
+          width: 100%;
+        }
+
+        .fancy-progress-bar-fill {
+          height: 100%;
+          border-radius: 4px;
+          transition: width 0.8s ease-out;
+        }
+
+        /* Table custom styling */
+        .fancy-table-container {
+          width: 100%;
+          overflow-x: auto;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border);
+          background-color: white;
+        }
+
+        .fancy-table {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+          font-size: 14px;
+        }
+
+        .fancy-table th {
+          background-color: #F8FAFC;
+          padding: 16px;
+          font-weight: 600;
+          color: var(--text-muted);
+          border-bottom: 1px solid var(--border);
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .fancy-table td {
+          padding: 16px;
+          border-bottom: 1px solid var(--border);
+          vertical-align: middle;
+        }
+
+        .fancy-table tr:last-child td {
+          border-bottom: none;
+        }
+
+        .badge-status {
+          font-size: 11px;
+          font-weight: 700;
+          padding: 4px 8px;
+          border-radius: 9999px;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .badge-status.pending {
+          background-color: #FEF3C7;
+          color: #D97706;
+        }
+
+        .badge-status.submitted {
+          background-color: #DBEAFE;
+          color: #2563EB;
+        }
+
+        .badge-status.graded {
+          background-color: #D1FAE5;
+          color: #059669;
+        }
+
+        /* AI Tutor Chat view styling */
+        .chat-container {
+          background-color: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          height: 520px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        .chat-messages-scroll {
+          flex: 1;
+          padding: 24px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          background-color: #F8FAFC;
+        }
+
+        .chat-bubble {
+          max-width: 75%;
+          padding: 14px 18px;
+          border-radius: 14px;
+          font-size: 14px;
+          line-height: 1.5;
+          position: relative;
+        }
+
+        .chat-bubble.ai {
+          background-color: white;
+          color: var(--text);
+          border: 1px solid var(--border);
+          align-self: flex-start;
+          border-top-left-radius: 2px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .chat-bubble.user {
+          background-color: var(--primary);
+          color: white;
+          align-self: flex-end;
+          border-top-right-radius: 2px;
+          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        }
+
+        .chat-time {
+          font-size: 10px;
+          color: var(--text-muted);
+          margin-top: 4px;
+          display: block;
+          text-align: right;
+        }
+
+        .chat-bubble.user .chat-time {
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .chat-chips-container {
+          padding: 12px 24px;
+          background-color: white;
+          border-top: 1px solid var(--border);
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          flex-shrink: 0;
+        }
+
+        .chat-chip {
+          padding: 6px 12px;
+          border-radius: 9999px;
+          background-color: #EEF2FF;
+          color: var(--primary);
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          border: 1px solid #E0E7FF;
+          white-space: nowrap;
+        }
+
+        .chat-chip:hover {
+          background-color: var(--primary);
+          color: white;
+          border-color: var(--primary);
+        }
+
+        .chat-input-bar {
+          padding: 16px 24px;
+          background-color: white;
+          border-top: 1px solid var(--border);
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .chat-input-field {
+          flex: 1;
+          height: 40px;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          padding: 0 16px;
+          font-size: 14px;
+          outline: none;
+        }
+
+        .chat-input-field:focus {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+
+        .chat-send-btn {
+          height: 40px;
+          width: 40px;
+          border-radius: 8px;
+          background-color: var(--primary);
+          color: white;
           display: flex;
           align-items: center;
           justify-content: center;
+          cursor: pointer;
+          border: none;
+          transition: opacity var(--transition-fast);
+        }
+
+        .chat-send-btn:hover {
+          opacity: 0.9;
+        }
+
+        /* Study Hours Chart Mockup */
+        .chart-svg-container {
+          width: 100%;
+          height: 200px;
+          background-color: #F8FAFC;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          position: relative;
+          overflow: hidden;
           padding: 16px;
         }
-        .modal-box-new {
+
+        /* Settings split layout */
+        .settings-grid {
+          display: grid;
+          grid-template-columns: 1.2fr 2fr;
+          gap: 32px;
+        }
+
+        @media (max-width: 900px) {
+          .settings-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        /* Profile Left card */
+        .profile-side-card {
           background: white;
-          border-radius: 12px;
-          box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-          width: 100%;
-          max-width: 480px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
           padding: 24px;
-          position: relative;
+          text-align: center;
+          box-shadow: var(--shadow-sm);
         }
-        .modal-box-lg-new {
-          max-width: 640px;
+
+        .profile-avatar-large {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #4F46E5 0%, #818CF8 100%);
+          color: white;
+          font-size: 32px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 16px;
+          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
         }
-        .quiz-option-btn-new {
+
+        /* Settings Form input controls */
+        .settings-form-group {
+          margin-bottom: 16px;
+        }
+
+        .settings-form-label {
+          display: block;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text);
+          margin-bottom: 6px;
+        }
+
+        .settings-input-control {
           width: 100%;
-          padding: 12px 16px;
-          text-align: left;
+          height: 40px;
           border-radius: 8px;
-          border: 1px solid #cbd5e1;
-          background-color: white;
-          cursor: pointer;
-          font-weight: 500;
-          transition: all 0.2s;
+          border: 1px solid var(--border);
+          padding: 0 16px;
+          font-size: 14px;
+          outline: none;
+          color: var(--text);
         }
-        .quiz-option-btn-new:hover {
-          background-color: #f8fafc;
-          border-color: #94a3b8;
+
+        .settings-input-control:focus {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
         }
-        .quiz-option-btn-new.selected {
-          border-color: #002e5b;
-          background-color: #eff6ff;
-          font-weight: 600;
-          box-shadow: 0 0 0 2px rgba(0,46,91,0.1);
-        }
-        .badge-red-pill {
-          background-color: #ef4444;
+
+        .btn-submit-settings {
+          background-color: var(--primary);
           color: white;
-          font-size: 10px;
-          font-weight: bold;
-          padding: 2px 8px;
-          border-radius: 9999px;
-          letter-spacing: 0.5px;
-        }
-        .btn-outline-new {
-          border: 1px solid #cbd5e1;
-          background-color: white;
-          color: #4b5563;
-          padding: 8px 16px;
-          border-radius: 6px;
-          font-weight: 600;
-          font-size: 13px;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-        .btn-outline-new:hover {
-          background-color: #f9fafb;
-        }
-        .btn-solid-new {
           border: none;
-          background-color: #002e5b;
-          color: white;
-          padding: 8px 18px;
-          border-radius: 6px;
+          padding: 10px 24px;
+          border-radius: 8px;
           font-weight: 600;
-          font-size: 13px;
           cursor: pointer;
-          transition: background-color 0.2s;
+          transition: opacity var(--transition-fast);
         }
-        .btn-solid-new:hover {
-          background-color: #001c3d;
+
+        .btn-submit-settings:hover {
+          opacity: 0.9;
+        }
+
+        .form-toggle-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 0;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .toggle-switch-input {
+          cursor: pointer;
+          height: 20px;
+          width: 38px;
+        }
+
+        /* AI Glowing Button */
+        .btn-ai-spark {
+          background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #C084FC 100%);
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 14px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+          transition: all var(--transition-fast);
+        }
+
+        .btn-ai-spark:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+        }
+
+        /* Typing indicator */
+        .typing-dots {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 10px 16px;
+          background-color: white;
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          align-self: flex-start;
+          border-top-left-radius: 2px;
+        }
+
+        .typing-dot {
+          width: 6px;
+          height: 6px;
+          background-color: var(--text-muted);
+          border-radius: 50%;
+          animation: bounce-dot 1.2s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce-dot {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+
+        /* Accordion for notes summary */
+        .note-summary-expandable {
+          background-color: #F8FAFC;
+          border-top: 1px solid var(--border);
+          padding: 16px;
+          font-size: 13px;
+          color: var(--text-muted);
+          animation: slideDownCustom 0.25s ease-out forwards;
+        }
+
+        @keyframes slideDownCustom {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-watch-toggle {
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          padding: 6px;
+          border-radius: 6px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-watch-toggle.watched {
+          color: var(--success);
+          background-color: #ECFDF5;
+        }
+
+        .btn-watch-toggle.unwatched {
+          color: var(--text-muted);
+          background-color: #F1F5F9;
         }
       `}</style>
 
-      {/* A. DASHBOARD VIEW (OVERVIEW) */}
-      {view === 'home' && (
-        <div className="animate-fade-in">
-          <div className="greeting-section">
-            <div>
-              <h1 className="greeting-title">Welcome back, {user?.name || "Rohan Sharma"}! 👋</h1>
-              <p className="greeting-sub">Keep learning, keep growing!</p>
-            </div>
-            
-            {/* Selector filters row */}
-            <div className="filters-inline-row">
-              <div className="filter-select-wrapper">
-                <span className="glyphicon glyphicon-briefcase" style={{ color: '#002e5b' }}></span>
-                <label>Department</label>
-                <select className="filter-select-inline" value={deptFilter} onChange={e => { setDeptFilter(e.target.value); triggerToast(`Dept: ${e.target.value}`); }}>
-                  <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                  <option value="Information Technology">Information Technology</option>
-                  <option value="Electronics & Communication">Electronics & Communication</option>
-                </select>
-              </div>
-
-              <div className="filter-select-wrapper">
-                <span className="glyphicon glyphicon-calendar" style={{ color: '#002e5b' }}></span>
-                <label>Semester</label>
-                <select className="filter-select-inline" value={semFilter} onChange={e => { setSemFilter(e.target.value); triggerToast(`Semester: ${e.target.value}`); }}>
-                  <option value="1st Semester">1st Semester</option>
-                  <option value="2nd Semester">2nd Semester</option>
-                  <option value="3rd Semester">3rd Semester</option>
-                  <option value="4th Semester">4th Semester</option>
-                </select>
-              </div>
-
-              <div className="filter-select-wrapper">
-                <span className="glyphicon glyphicon-user" style={{ color: '#002e5b' }}></span>
-                <label>Section</label>
-                <select className="filter-select-inline" value={secFilter} onChange={e => { setSecFilter(e.target.value); triggerToast(`Section: ${e.target.value}`); }}>
-                  <option value="CSE - A">CSE - A</option>
-                  <option value="CSE - B">CSE - B</option>
-                  <option value="IT - A">IT - A</option>
-                </select>
-              </div>
-            </div>
+      {/* Persistent Left-Aligned Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-brand">
+          <div className="brand-logo-circle">
+            <GraduationCap className="text-white h-5 w-5" />
           </div>
-
-          {/* 4 Stat Cards */}
-          <div className="stats-grid">
-            <StatCard
-              icon="glyphicon-book"
-              count={6}
-              label="Subjects Enrolled"
-              subtext="View all subjects →"
-              subtextColorClass="link-blue-new"
-              iconBgColorClass="color-blue-bg"
-              onClick={() => triggerToast("Viewing enrollment details")}
-            />
-
-            <StatCard
-              icon="glyphicon-facetime-video"
-              count={liveClasses.length}
-              label="Live Classes Today"
-              subtext="View timetable →"
-              subtextColorClass="text-success"
-              iconBgColorClass="color-green-bg"
-              onClick={() => { setSelectedLiveClass(null); setView('live'); }}
-            />
-
-            <StatCard
-              icon="glyphicon-film"
-              count={24}
-              label="Lectures Completed"
-              subtext="This semester"
-              subtextColorClass="text-muted"
-              iconBgColorClass="color-purple-bg"
-              onClick={() => setView('recorded')}
-            />
-
-            <StatCard
-              icon="glyphicon-check"
-              count={`${score} pts`}
-              label="Quiz Score"
-              subtext="Participate in quizzes"
-              subtextColorClass="text-muted"
-              iconBgColorClass="color-red-bg"
-              onClick={() => setView('quiz')}
-            />
-          </div>
-
-          {/* Triple Grid Panel Rows */}
-          <div className="panels-grid-3">
-            
-            {/* Column 1: Upcoming Today schedule */}
-            <div className="panel-card-new">
-              <div className="panel-header-new">
-                <h2 className="panel-title-new">
-                  <span className="glyphicon glyphicon-time"></span> Upcoming Today
-                </h2>
-                <span className="link-blue-new" onClick={() => triggerToast("Timetable details loaded")}>View Timetable</span>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div className="upcoming-row-item">
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-time">
-                      <span className="glyphicon glyphicon-time" style={{ fontSize: '10px' }}></span> 09:00 AM - 10:00 AM
-                    </span>
-                    <span className="upcoming-subject">Data Structures</span>
-                    <span className="upcoming-teacher">Dr. Sarah Verma</span>
-                  </div>
-                  <span className="badge-live-pill" style={{ cursor: 'pointer' }} onClick={() => {
-                    const dsClass = liveClasses.find(c => c.id === 1);
-                    setSelectedLiveClass(dsClass || null);
-                    setView('live');
-                  }}>Live</span>
-                </div>
-
-                <div className="upcoming-row-item">
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-time">
-                      <span className="glyphicon glyphicon-time" style={{ fontSize: '10px' }}></span> 10:15 AM - 11:15 AM
-                    </span>
-                    <span className="upcoming-subject">Web Development</span>
-                    <span className="upcoming-teacher">Dr. Sarah Verma</span>
-                  </div>
-                  <span className="badge-live-pill" style={{ cursor: 'pointer' }} onClick={() => {
-                    const wdClass = liveClasses.find(c => c.id === 2);
-                    setSelectedLiveClass(wdClass || null);
-                    setView('live');
-                  }}>Live</span>
-                </div>
-
-                <div className="upcoming-row-item">
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-time">
-                      <span className="glyphicon glyphicon-time" style={{ fontSize: '10px' }}></span> 11:30 AM - 12:30 PM
-                    </span>
-                    <span className="upcoming-subject">Mathematics III</span>
-                    <span className="upcoming-teacher">Dr. Rajesh Kumar</span>
-                  </div>
-                  <span className="badge-upcoming-pill">Upcoming</span>
-                </div>
-
-                <div className="upcoming-row-item">
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-time">
-                      <span className="glyphicon glyphicon-time" style={{ fontSize: '10px' }}></span> 02:00 PM - 03:00 PM
-                    </span>
-                    <span className="upcoming-subject">Database Management System</span>
-                    <span className="upcoming-teacher">Dr. Amit Singh</span>
-                  </div>
-                  <span className="badge-upcoming-pill">Upcoming</span>
-                </div>
-              </div>
-              <span style={{ display: 'block', fontSize: '11px', color: '#9ca3af', marginTop: '12px' }}>
-                All times in IST
-              </span>
-            </div>
-
-            {/* Column 2: Enrolled subjects list */}
-            <div className="panel-card-new">
-              <div className="panel-header-new">
-                <h2 className="panel-title-new">
-                  <span className="glyphicon glyphicon-book"></span> My Subjects
-                </h2>
-                <span className="link-blue-new" onClick={() => triggerToast("Roster synchronized")}>View All</span>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div className="subject-roster-item">
-                  <div className="subject-circle-initial subj-color-blue">DS</div>
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-subject" style={{ fontSize: '13px' }}>Data Structures</span>
-                    <span className="upcoming-teacher">Dr. Sarah Verma</span>
-                  </div>
-                </div>
-
-                <div className="subject-roster-item">
-                  <div className="subject-circle-initial subj-color-blue">WD</div>
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-subject" style={{ fontSize: '13px' }}>Web Development</span>
-                    <span className="upcoming-teacher">Dr. Sarah Verma</span>
-                  </div>
-                </div>
-
-                <div className="subject-roster-item">
-                  <div className="subject-circle-initial subj-color-orange">DB</div>
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-subject" style={{ fontSize: '13px' }}>Database Management System</span>
-                    <span className="upcoming-teacher">Dr. Amit Singh</span>
-                  </div>
-                </div>
-
-                <div className="subject-roster-item">
-                  <div className="subject-circle-initial subj-color-purple">M3</div>
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-subject" style={{ fontSize: '13px' }}>Mathematics III</span>
-                    <span className="upcoming-teacher">Dr. Rajesh Kumar</span>
-                  </div>
-                </div>
-
-                <div className="subject-roster-item">
-                  <div className="subject-circle-initial subj-color-green">CO</div>
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-subject" style={{ fontSize: '13px' }}>Computer Organization</span>
-                    <span className="upcoming-teacher">Dr. Neha Gupta</span>
-                  </div>
-                </div>
-
-                <div className="subject-roster-item">
-                  <div className="subject-circle-initial subj-color-pink">DL</div>
-                  <div className="upcoming-meta-left">
-                    <span className="upcoming-subject" style={{ fontSize: '13px' }}>Digital Logic Design</span>
-                    <span className="upcoming-teacher">Dr. Pawan Kumar</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Column 3: Recent Recorded Lectures */}
-            <div className="panel-card-new">
-              <div className="panel-header-new">
-                <h2 className="panel-title-new">
-                  <span className="glyphicon glyphicon-film"></span> Recent Lectures
-                </h2>
-                <span className="link-blue-new" onClick={() => setView('recorded')}>View All</span>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div className="recent-lecture-row">
-                  <div className="recent-left-group">
-                    <button className="play-btn-circle" onClick={() => triggerToast("Playing: Introduction to React Hooks")}>
-                      <span className="glyphicon glyphicon-play"></span>
-                    </button>
-                    <div className="recent-meta-text">
-                      <span className="recent-title">Introduction to React Hooks</span>
-                      <span className="recent-sub">Web Development</span>
-                    </div>
-                  </div>
-                  <div className="recent-meta-text" style={{ textAlign: 'right', fontSize: '11px', color: '#6b7280' }}>
-                    <span>08 Jun 2026</span>
-                    <span>45:12</span>
-                  </div>
-                </div>
-
-                <div className="recent-lecture-row">
-                  <div className="recent-left-group">
-                    <button className="play-btn-circle" onClick={() => triggerToast("Playing: Arrays and Linked Lists")}>
-                      <span className="glyphicon glyphicon-play"></span>
-                    </button>
-                    <div className="recent-meta-text">
-                      <span className="recent-title">Arrays and Linked Lists</span>
-                      <span className="recent-sub">Data Structures</span>
-                    </div>
-                  </div>
-                  <div className="recent-meta-text" style={{ textAlign: 'right', fontSize: '11px', color: '#6b7280' }}>
-                    <span>07 Jun 2026</span>
-                    <span>52:40</span>
-                  </div>
-                </div>
-
-                <div className="recent-lecture-row">
-                  <div className="recent-left-group">
-                    <button className="play-btn-circle" onClick={() => triggerToast("Playing: Normalization in DBMS")}>
-                      <span className="glyphicon glyphicon-play"></span>
-                    </button>
-                    <div className="recent-meta-text">
-                      <span className="recent-title">Normalization in DBMS</span>
-                      <span className="recent-sub">Database Management System</span>
-                    </div>
-                  </div>
-                  <div className="recent-meta-text" style={{ textAlign: 'right', fontSize: '11px', color: '#6b7280' }}>
-                    <span>06 Jun 2026</span>
-                    <span>48:33</span>
-                  </div>
-                </div>
-
-                <div className="recent-lecture-row">
-                  <div className="recent-left-group">
-                    <button className="play-btn-circle" onClick={() => triggerToast("Playing: Limits and Continuity")}>
-                      <span className="glyphicon glyphicon-play"></span>
-                    </button>
-                    <div className="recent-meta-text">
-                      <span className="recent-title">Limits and Continuity</span>
-                      <span className="recent-sub">Mathematics III</span>
-                    </div>
-                  </div>
-                  <div className="recent-meta-text" style={{ textAlign: 'right', fontSize: '11px', color: '#6b7280' }}>
-                    <span>05 Jun 2026</span>
-                    <span>46:18</span>
-                  </div>
-                </div>
-
-                <button className="btn-full-browse" onClick={() => setView('recorded')}>
-                  <span className="glyphicon glyphicon-play"></span> Browse All Recorded Lectures
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Quick Action Row Panels */}
-          <div className="panels-grid-2">
-            
-            {/* Quiz Activity shortcut Banner */}
-            <div className="action-banner-card" style={{ border: '1px solid #bbf7d0', backgroundColor: '#f0fdf4' }}>
-              <div className="action-card-left">
-                <div className="action-card-icon-round" style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
-                  <span className="glyphicon glyphicon-check"></span>
-                </div>
-                <div>
-                  <h4 style={{ margin: '0 0 4px 0', fontWeight: 'bold', fontSize: '14px', color: '#14532d' }}>
-                    Your current score: {score} pts
-                  </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#166534' }}>
-                    Quizzes appear in real-time during live streaming classes.
-                  </p>
-                </div>
-              </div>
-              <button className="btn-action-solid" style={{ backgroundColor: '#16a34a' }} onClick={() => {
-                const wdClass = liveClasses.find(c => c.id === 2);
-                setSelectedLiveClass(wdClass || null);
-                setView('live');
-              }}>
-                Participate in Quiz
-              </button>
-            </div>
-
-            {/* My Notes AI Summary shortcut Banner */}
-            <div className="action-banner-card" style={{ border: '1px solid #fed7aa', backgroundColor: '#fff7ed' }}>
-              <div className="action-card-left">
-                <div className="action-card-icon-round" style={{ backgroundColor: '#ffedd5', color: '#c2410c' }}>
-                  <span className="glyphicon glyphicon-edit"></span>
-                </div>
-                <div>
-                  <h4 style={{ margin: '0 0 4px 0', fontWeight: 'bold', fontSize: '14px', color: '#7c2d12' }}>
-                    Take notes & generate AI summary
-                  </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#9a3412' }}>
-                    Compile transcripts to study guides and download to markdown notes.
-                  </p>
-                </div>
-              </div>
-              <button className="btn-action-solid" style={{ backgroundColor: '#ea580c' }} onClick={() => setView('notes')}>
-                Go to My Notes
-              </button>
-            </div>
-          </div>
+          <span className="brand-name">Vidyastra AI</span>
         </div>
-      )}
 
-      {/* B. LIVE CLASSROOM OR LIVE CLASS LIST */}
-      {view === 'live' && (
-        selectedLiveClass === null ? (
-          <div className="animate-fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
-              <div>
-                <h2 className="erp-page-title" style={{ margin: 0, paddingBottom: 0, borderBottom: 'none' }}>
-                  <span className="glyphicon glyphicon-facetime-video"></span> Live Classes Portal
-                </h2>
-                <p style={{ color: '#6b7280', fontSize: '13px', margin: '4px 0 0 0' }}>
-                  Real-time interactive virtual classrooms currently broadcasting.
-                </p>
+        <nav className="sidebar-menu">
+          <button className={`menu-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveTab('dashboard'); setSidebarOpen(false); }}>
+            <LayoutDashboard className="h-4 w-4" />
+            <span>Dashboard</span>
+          </button>
+          
+          <button className={`menu-item ${activeTab === 'courses' ? 'active' : ''}`} onClick={() => { setActiveTab('courses'); setSidebarOpen(false); }}>
+            <BookOpen className="h-4 w-4" />
+            <span>My Courses</span>
+          </button>
+
+          <button className={`menu-item ${activeTab === 'lectures' ? 'active' : ''}`} onClick={() => { setActiveTab('lectures'); setSidebarOpen(false); }}>
+            <Video className="h-4 w-4" />
+            <span>Lecture Library</span>
+          </button>
+
+          <button className={`menu-item ${activeTab === 'notes' ? 'active' : ''}`} onClick={() => { setActiveTab('notes'); setSidebarOpen(false); }}>
+            <FileText className="h-4 w-4" />
+            <span>AI Notes</span>
+          </button>
+
+          <button className={`menu-item ${activeTab === 'quiz' ? 'active' : ''}`} onClick={() => { setActiveTab('quiz'); setSidebarOpen(false); }}>
+            <Award className="h-4 w-4" />
+            <span>AI Quiz</span>
+          </button>
+
+          <button className={`menu-item ${activeTab === 'assignments' ? 'active' : ''}`} onClick={() => { setActiveTab('assignments'); setSidebarOpen(false); }}>
+            <ClipboardList className="h-4 w-4" />
+            <span>Assignments</span>
+          </button>
+
+          <button className={`menu-item ${activeTab === 'tutor' ? 'active' : ''}`} onClick={() => { setActiveTab('tutor'); setSidebarOpen(false); }}>
+            <MessageSquare className="h-4 w-4" />
+            <span>AI Tutor</span>
+          </button>
+
+          <button className={`menu-item ${activeTab === 'progress' ? 'active' : ''}`} onClick={() => { setActiveTab('progress'); setSidebarOpen(false); }}>
+            <BarChart2 className="h-4 w-4" />
+            <span>Progress & Analytics</span>
+          </button>
+
+          <button className={`menu-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => { setActiveTab('notifications'); setSidebarOpen(false); }}>
+            <Bell className="h-4 w-4" />
+            <span style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+              <span>Notifications</span>
+              {unreadNotificationsCount > 0 && (
+                <span style={{ backgroundColor: '#EF4444', color: 'white', fontSize: '10px', padding: '1px 6px', borderRadius: '10px', fontWeight: 'bold' }}>
+                  {unreadNotificationsCount}
+                </span>
+              )}
+            </span>
+          </button>
+
+          <button className={`menu-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }}>
+            <Settings className="h-4 w-4" />
+            <span>Profile & Settings</span>
+          </button>
+        </nav>
+
+        <div className="sidebar-footer">
+          <button className="logout-btn" onClick={onLogout}>
+            <LogOut className="h-4 w-4" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Workspace */}
+      <main className="main-workspace">
+        {/* Top Header Navigation */}
+        <header className="workspace-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button className="mobile-menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+            <h1 className="header-title">
+              {activeTab === 'dashboard' && 'Dashboard Overview'}
+              {activeTab === 'courses' && 'My Enrolled Courses'}
+              {activeTab === 'lectures' && 'Vidyastra Video Archive'}
+              {activeTab === 'notes' && 'AI Classroom Summaries'}
+              {activeTab === 'quiz' && 'Interactive Assessment Hub'}
+              {activeTab === 'assignments' && 'Curriculum Tasks'}
+              {activeTab === 'tutor' && 'Vidyastra AI Smart Tutor'}
+              {activeTab === 'progress' && 'Academic Performance Engine'}
+              {activeTab === 'notifications' && 'System Notifications'}
+              {activeTab === 'settings' && 'User Settings Manager'}
+            </h1>
+          </div>
+
+          <div className="header-actions">
+            {/* Notification Bell Shortcut */}
+            <button className="bell-trigger" onClick={() => setActiveTab('notifications')}>
+              <Bell className="h-5 w-5" />
+              {unreadNotificationsCount > 0 && (
+                <span className="bell-badge">{unreadNotificationsCount}</span>
+              )}
+            </button>
+
+            {/* Profile Summary Card */}
+            <div className="user-avatar-profile" onClick={() => setActiveTab('settings')}>
+              <div className="avatar-circle-sm">
+                {profile.name.split(' ').map(n => n[0]).join('')}
+              </div>
+              <div className="user-meta-header" style={{ display: 'none', md: 'flex' }}>
+                <span className="user-name-txt">{profile.name}</span>
+                <span className="user-role-txt">{profile.degree}</span>
               </div>
             </div>
+          </div>
+        </header>
 
-            <div className="row">
-              {liveClasses.map((c) => (
-                <div key={c.id} className="col-md-6" style={{ marginBottom: '20px' }}>
-                  <div className="panel-card-new" style={{ minHeight: '260px', position: 'relative', borderLeft: '4px solid #16a34a', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                    <div style={{ position: 'absolute', top: '18px', right: '18px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="pulse-dot-live" style={{ backgroundColor: '#ef4444' }}></span>
-                      <span className="badge-red-pill" style={{ backgroundColor: '#ef4444', margin: 0, padding: '3px 8px' }}>● LIVE</span>
+        {/* Workspace Content Scrollable Area */}
+        <div className="workspace-content">
+          {/* Sub-view switcher logic */}
+
+          {/* 1. DASHBOARD OVERVIEW VIEW */}
+          {activeTab === 'dashboard' && (
+            <div className="view-fade-in">
+              {/* Premium Welcome Banner */}
+              <div className="gradient-banner">
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px', fontFamily: 'var(--heading-font)' }}>
+                    Welcome back, {profile.name}! 👋
+                  </h2>
+                  <p style={{ color: '#E0E7FF', fontSize: '14px', maxWidth: '480px' }}>
+                    You have watched {watchedLecturesCount} of {lectures.length} total lectures this semester. Complete your next quiz to maintain your streak!
+                  </p>
+                </div>
+                <GraduationCap className="gradient-banner-bg-sparks" />
+              </div>
+
+              {/* Metric Cards Grid */}
+              <div className="metrics-grid">
+                <div className="metric-card-styled">
+                  <div className="metric-icon-box" style={{ backgroundColor: '#EEF2FF', color: 'var(--primary)' }}>
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="metric-value">{courses.length}</div>
+                    <div className="metric-label">Subjects Enrolled</div>
+                  </div>
+                </div>
+
+                <div className="metric-card-styled">
+                  <div className="metric-icon-box" style={{ backgroundColor: '#ECFDF5', color: '#10B981' }}>
+                    <Check className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="metric-value">92%</div>
+                    <div className="metric-label">Average Attendance</div>
+                  </div>
+                </div>
+
+                <div className="metric-card-styled">
+                  <div className="metric-icon-box" style={{ backgroundColor: '#FAF5FF', color: '#8B5CF6' }}>
+                    <Video className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="metric-value">{lectureProgressPercent}%</div>
+                    <div className="metric-label">Lecture Progress</div>
+                  </div>
+                </div>
+
+                <div className="metric-card-styled">
+                  <div className="metric-icon-box" style={{ backgroundColor: '#FFF7ED', color: '#F59E0B' }}>
+                    <Award className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="metric-value">{quizScorePoints} pts</div>
+                    <div className="metric-label">AI Quiz Score</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Two Column Grid */}
+              <div className="dashboard-main-grid">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  {/* Upcoming Classes */}
+                  <div className="gorgeous-card">
+                    <h3 className="section-header-title">
+                      <Clock className="h-4 w-4 text-indigo-500" /> Upcoming Classes
+                    </h3>
+                    <div className="fancy-table-container">
+                      <table className="fancy-table">
+                        <thead>
+                          <tr>
+                            <th>Class/Subject</th>
+                            <th>Time slot</th>
+                            <th>Instructor & Location</th>
+                            <th>Status / Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>
+                              <span style={{ fontWeight: '700', color: '#1E293B' }}>Data Structures & Algorithms</span>
+                              <span style={{ fontSize: '11px', display: 'block', color: 'var(--text-muted)' }}>CS201 • Theory</span>
+                            </td>
+                            <td>09:00 AM - 10:00 AM</td>
+                            <td>Dr. Sarah Verma (Room LHC-102)</td>
+                            <td>
+                              <button className="btn-join-class" onClick={() => triggerToast("Launching virtual classroom space... Enjoy your lecture!", "success")}>
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                Join Live
+                              </button>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <span style={{ fontWeight: '700', color: '#1E293B' }}>Database Management Systems</span>
+                              <span style={{ fontSize: '11px', display: 'block', color: 'var(--text-muted)' }}>CS202 • Lab Session</span>
+                            </td>
+                            <td>10:15 AM - 11:15 AM</td>
+                            <td>Dr. Sarah Verma (Room LHC-204)</td>
+                            <td>
+                              <button className="btn-join-class" onClick={() => triggerToast("Initializing secure compiler stream... Enjoy your lab!", "success")}>
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                Join Lab
+                              </button>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <span style={{ fontWeight: '700', color: '#1E293B' }}>Operating Systems</span>
+                              <span style={{ fontSize: '11px', display: 'block', color: 'var(--text-muted)' }}>CS203 • Lecture</span>
+                            </td>
+                            <td>11:30 AM - 12:30 PM</td>
+                            <td>Dr. Amit Singh (Room LHC-101)</td>
+                            <td>
+                              <span className="btn-upcoming">Scheduled</span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div className="gorgeous-card">
+                    <h3 className="section-header-title">
+                      <TrendingUp className="h-4 w-4 text-emerald-500" /> Recent Activity
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6' }}>
+                            <FileText className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <span style={{ fontWeight: '600', fontSize: '13px' }}>Downloaded study notes</span>
+                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>Binary Tree Traversals Guide.md</p>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>2 hrs ago</span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}>
+                            <ClipboardList className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <span style={{ fontWeight: '600', fontSize: '13px' }}>Submitted task assignment</span>
+                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>Custom Shell Scripting & Pointers</p>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>1 day ago</span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#FFF7ED', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B' }}>
+                            <Award className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <span style={{ fontWeight: '600', fontSize: '13px' }}>Completed assessment test</span>
+                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>Binary Search Trees AVL Quiz (Score: 80%)</p>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>2 days ago</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: AI recommendations */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div className="gorgeous-card" style={{ border: '1px dashed #A5B4FC', background: '#F5F3FF' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#6D28D9' }}>
+                      <Sparkles className="h-5 w-5 animate-pulse" />
+                      <h3 style={{ margin: 0, fontWeight: '700', fontSize: '15px', fontFamily: 'var(--heading-font)' }}>AI Learning Advisor</h3>
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#5B21B6', lineHeight: '1.5', marginBottom: '16px' }}>
+                      I've analyzed your academic footprint, quiz responses, and video lecture progress. Here are my tailored suggestions:
+                    </p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ backgroundColor: 'white', padding: '14px', borderRadius: '8px', border: '1px solid #E9D5FF' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#7C3AED', textTransform: 'uppercase' }}>DSA Recommendation</span>
+                        <p style={{ fontSize: '12px', color: 'var(--text)', margin: '4px 0 10px 0', fontWeight: '500' }}>
+                          Let's practice **Binary Search** details with the interactive chatbot to cement your worst-case runtime concepts.
+                        </p>
+                        <button onClick={() => setActiveTab('tutor')} style={{ backgroundColor: '#F5F3FF', border: '1px solid #C084FC', color: '#7C3AED', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
+                          Launch AI Tutor →
+                        </button>
+                      </div>
+
+                      <div style={{ backgroundColor: 'white', padding: '14px', borderRadius: '8px', border: '1px solid #E9D5FF' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#7C3AED', textTransform: 'uppercase' }}>DBMS Recommendation</span>
+                        <p style={{ fontSize: '12px', color: 'var(--text)', margin: '4px 0 10px 0', fontWeight: '500' }}>
+                          Your lecture *SQL Joins and Subqueries* is currently unwatched. Complete it before the SQL assignment deadline.
+                        </p>
+                        <button onClick={() => setActiveTab('lectures')} style={{ backgroundColor: '#F5F3FF', border: '1px solid #C084FC', color: '#7C3AED', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
+                          Go to Lectures →
+                        </button>
+                      </div>
+
+                      <div style={{ backgroundColor: 'white', padding: '14px', borderRadius: '8px', border: '1px solid #E9D5FF' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#7C3AED', textTransform: 'uppercase' }}>Interactive Practice</span>
+                        <p style={{ fontSize: '12px', color: 'var(--text)', margin: '4px 0 10px 0', fontWeight: '500' }}>
+                          Want a custom 3-question diagnostic test? Generate a quiz based on DBMS schemas or tree nodes.
+                        </p>
+                        <button onClick={() => setActiveTab('quiz')} style={{ backgroundColor: '#7C3AED', border: 'none', color: 'white', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
+                          Generate AI Quiz ✦
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 2. MY COURSES VIEW */}
+          {activeTab === 'courses' && (
+            <div className="view-fade-in">
+              <div className="courses-grid-cards">
+                {courses.map((course, idx) => (
+                  <div key={idx} className="course-fancy-card">
+                    <div className={`course-fancy-header bg-gradient-to-br ${course.bgGradient}`}>
+                      <span className="text-white text-xs font-bold bg-white/20 px-2.5 py-1 rounded" style={{ display: 'inline-block', marginBottom: '8px' }}>
+                        {course.code}
+                      </span>
+                      <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>{course.name}</h3>
+                      <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', marginTop: '6px' }}>Instructor: {course.instructor}</p>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-                      <div className="subject-circle-initial subj-color-blue" style={{ width: '44px', height: '44px', fontSize: '16px', fontWeight: 'bold', flexShrink: 0 }}>
-                        {c.subject.split(' ').map(w => w[0]).join('')}
+                    <div className="course-fancy-body">
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Syllabus Covered</span>
+                          <span style={{ color: 'var(--text)' }}>{course.progress}%</span>
+                        </div>
+                        <div className="fancy-progress-bar-container">
+                          <div 
+                            className="fancy-progress-bar-fill" 
+                            style={{ 
+                              width: `${course.progress}%`,
+                              backgroundColor: course.code === 'CS201' ? '#4F46E5' : course.code === 'CS202' ? '#A855F7' : course.code === 'CS203' ? '#F59E0B' : '#10B981'
+                            }} 
+                          />
+                        </div>
                       </div>
-                      <div style={{ paddingRight: '70px' }}>
-                        <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700', textTransform: 'uppercase', display: 'block', letterSpacing: '0.5px' }}>{c.startTime}</span>
-                        <h3 style={{ margin: '4px 0 2px 0', fontSize: '17px', fontWeight: 'bold', color: '#002e5b' }}>{c.subject}</h3>
-                        <p style={{ margin: 0, fontSize: '12px', fontWeight: '600', color: '#16a34a' }}>Topic: {c.topic}</p>
+
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                        <button 
+                          onClick={() => {
+                            setLectureFilter(course.category);
+                            setActiveTab('lectures');
+                            triggerToast(`Displaying lectures for ${course.name}`);
+                          }}
+                          style={{ flex: 1, backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', padding: '8px', fontSize: '12px', fontWeight: '600', borderRadius: '6px', cursor: 'pointer', color: 'var(--text)' }}
+                        >
+                          Lectures
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setQuizTopic(course.category);
+                            setActiveTab('quiz');
+                            triggerToast(`Preparing quiz workspace for ${course.name}`);
+                          }}
+                          style={{ flex: 1, backgroundColor: '#4F46E5', border: 'none', color: 'white', padding: '8px', fontSize: '12px', fontWeight: '600', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          Practice Test
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 3. LECTURE LIBRARY VIEW */}
+          {activeTab === 'lectures' && (
+            <div className="view-fade-in">
+              {/* Filter and Search Bar Row */}
+              <div className="gorgeous-card" style={{ marginBottom: '24px', padding: '16px 20px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center' }}>
+                  {/* Category Filter Pills */}
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {['All', 'DSA', 'DBMS', 'OS', 'CN'].map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setLectureFilter(cat)}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '9999px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor: lectureFilter === cat ? 'var(--primary)' : '#EEF2FF',
+                          color: lectureFilter === cat ? 'white' : 'var(--primary)',
+                          transition: 'all var(--transition-fast)'
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Search input field */}
+                  <input
+                    type="text"
+                    placeholder="Search lecture topic..."
+                    value={lectureSearch}
+                    onChange={(e) => setLectureSearch(e.target.value)}
+                    style={{
+                      height: '36px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border)',
+                      padding: '0 12px',
+                      fontSize: '13px',
+                      outline: 'none',
+                      width: '260px'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Lecture Archive Listing Table */}
+              <div className="gorgeous-card">
+                <div className="fancy-table-container">
+                  <table className="fancy-table">
+                    <thead>
+                      <tr>
+                        <th>Watch Status</th>
+                        <th>Lecture Topic</th>
+                        <th>Course</th>
+                        <th>Duration</th>
+                        <th>Uploaded Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lectures
+                        .filter(l => lectureFilter === 'All' || l.subject === lectureFilter)
+                        .filter(l => l.topic.toLowerCase().includes(lectureSearch.toLowerCase()))
+                        .map((lecture) => (
+                          <tr key={lecture.id}>
+                            <td>
+                              <button 
+                                className={`btn-watch-toggle ${lecture.watched ? 'watched' : 'unwatched'}`}
+                                onClick={() => toggleLectureWatched(lecture.id)}
+                                title={lecture.watched ? 'Mark as Not Watched' : 'Mark as Watched'}
+                              >
+                                {lecture.watched ? <Check className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                              </button>
+                            </td>
+                            <td>
+                              <span style={{ fontWeight: '600', color: lecture.watched ? 'var(--text-muted)' : 'var(--text)' }}>
+                                {lecture.topic}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#EFF6FF', color: 'var(--primary)' }}>
+                                {lecture.subject}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                                <Clock className="h-3.5 w-3.5" /> {lecture.duration}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{lecture.date}</span>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 4. AI NOTES VIEW */}
+          {activeTab === 'notes' && (
+            <div className="view-fade-in">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {notes.map((note) => (
+                  <div key={note.id} className="gorgeous-card" style={{ padding: '20px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ backgroundColor: '#EEF2FF', color: 'var(--primary)', fontWeight: '700', fontSize: '11px', padding: '2px 8px', borderRadius: '4px' }}>
+                            {note.subject}
+                          </span>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Generated: {note.date}</span>
+                        </div>
+                        <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '8px 0 6px 0', color: 'var(--text)' }}>
+                          {note.title}
+                        </h3>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {note.tags.map(t => (
+                            <span key={t} style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>{t}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => setExpandedNoteId(expandedNoteId === note.id ? null : note.id)}
+                          style={{ backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', color: 'var(--text)' }}
+                        >
+                          {expandedNoteId === note.id ? 'Hide Summary' : 'View AI Summary ✦'}
+                        </button>
+                        <button
+                          onClick={() => handleDownloadNote(note.title)}
+                          className="btn-join-class"
+                          style={{ padding: '8px 14px' }}
+                        >
+                          <Download className="h-4 w-4" /> Download PDF
+                        </button>
                       </div>
                     </div>
 
-                    <div style={{ backgroundColor: '#f8fafc', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 10px', fontSize: '12px', border: '1px solid #f1f5f9' }}>
-                      <div>
-                        <span style={{ color: '#6b7280', display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>Instructor</span>
-                        <strong style={{ color: '#1f2937' }}>{c.teacher}</strong>
+                    {expandedNoteId === note.id && (
+                      <div className="note-summary-expandable">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontWeight: '700', fontSize: '12px', marginBottom: '8px' }}>
+                          <Sparkles className="h-4 w-4" /> AI Generated Summary
+                        </div>
+                        <p style={{ margin: 0, lineHeight: '1.6' }}>{note.summary}</p>
                       </div>
-                      <div>
-                        <span style={{ color: '#6b7280', display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>Location</span>
-                        <strong style={{ color: '#1f2937' }}>{c.room}</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: '#6b7280', display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>Elapsed Time</span>
-                        <strong style={{ color: '#1f2937' }}>{c.duration}</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: '#6b7280', display: 'block', fontSize: '10px', textTransform: 'uppercase', fontWeight: '600' }}>Attendance</span>
-                        <strong style={{ color: '#2563eb' }}>{c.studentsJoined} students online</strong>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 5. AI QUIZ VIEW */}
+          {activeTab === 'quiz' && (
+            <div className="view-fade-in">
+              {/* Highlight AI Generator Button */}
+              <div className="gradient-banner" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #C084FC 100%)', padding: '28px 32px' }}>
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <h2 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '8px', fontFamily: 'var(--heading-font)' }}>
+                    Generate Quiz with AI ✦
+                  </h2>
+                  <p style={{ color: '#F3E8FF', fontSize: '14px', maxWidth: '520px', marginBottom: '16px' }}>
+                    Generate standard 3-question assessment test sets customized to your syllabus target and track your performance points.
+                  </p>
+                  
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: '700', color: '#D8B4FE', textTransform: 'uppercase' }}>Select Syllabus Topic</label>
+                      <select 
+                        value={quizTopic} 
+                        onChange={(e) => setQuizTopic(e.target.value)}
+                        style={{ height: '36px', borderRadius: '6px', border: 'none', padding: '0 8px', fontSize: '12px', outline: 'none', minWidth: '150px', backgroundColor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: '600' }}
+                      >
+                        <option value="DSA" style={{ color: '#000' }}>Data Structures (DSA)</option>
+                        <option value="DBMS" style={{ color: '#000' }}>Database Systems (DBMS)</option>
+                        <option value="OS" style={{ color: '#000' }}>Operating Systems (OS)</option>
+                        <option value="CN" style={{ color: '#000' }}>Computer Networks (CN)</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontWeight: '700', color: '#D8B4FE', textTransform: 'uppercase' }}>Select Difficulty</label>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {['Easy', 'Medium', 'Hard'].map((diff) => (
+                          <button
+                            key={diff}
+                            onClick={() => setQuizDifficulty(diff)}
+                            style={{
+                              height: '36px',
+                              padding: '0 12px',
+                              borderRadius: '6px',
+                              border: 'none',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              backgroundColor: quizDifficulty === diff ? 'white' : 'rgba(255,255,255,0.15)',
+                              color: quizDifficulty === diff ? 'var(--primary)' : 'white',
+                              transition: 'all var(--transition-fast)'
+                            }}
+                          >
+                            {diff}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
                     <button 
-                      onClick={() => {
-                        setSelectedLiveClass(c);
-                        triggerToast(`Joined classroom: ${c.subject}`);
-                      }} 
-                      className="btn-solid-new" 
-                      style={{ width: '100%', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: 'auto' }}
+                      onClick={startAiQuizGeneration}
+                      disabled={quizGenerating}
+                      className="btn-ai-spark"
+                      style={{ alignSelf: 'flex-end', height: '36px', boxShadow: 'none', background: '#FFFFFF', color: '#7C3AED' }}
                     >
-                      <span className="glyphicon glyphicon-log-in"></span> Join Classroom
+                      {quizGenerating ? 'Generating Quiz...' : 'Generate Quiz ✦'}
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="animate-fade-in">
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-              <button onClick={() => setSelectedLiveClass(null)} className="btn-outline-new" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="glyphicon glyphicon-arrow-left"></span> Leave Class
-              </button>
-              <button onClick={() => setView('home')} className="btn-outline-new" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="glyphicon glyphicon-home"></span> Dashboard Home
-              </button>
-            </div>
+                <Sparkles className="gradient-banner-bg-sparks" style={{ color: '#C084FC', opacity: 0.25 }} />
+              </div>
 
-            <div className="row">
-              <div className="col-md-8">
-                {/* Video Presentation */}
-                <div className="panel-card-new" style={{ padding: 0, overflow: 'hidden', marginBottom: '16px' }}>
-                  <div className="panel-header-new" style={{ padding: '12px 20px', margin: 0, backgroundColor: '#002e5b', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 className="panel-title-new" style={{ color: 'white', margin: 0 }}>
-                      <span className="glyphicon glyphicon-facetime-video"></span> Live stream: {selectedLiveClass.subject} ({selectedLiveClass.room})
-                    </h3>
-                    <span className="badge-red-pill">● LIVE</span>
+              {/* Interactive AI Quiz Session Container */}
+              {aiQuizActive && (
+                <div className="gorgeous-card" style={{ marginBottom: '24px', border: '2px solid #C084FC' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '16px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Sparkles className="h-5 w-5 text-purple-600" />
+                      <h3 style={{ margin: 0, fontWeight: '700', fontSize: '16px' }}>Live AI Generated Practice: {quizTopic} ({quizDifficulty})</h3>
+                    </div>
+                    <button 
+                      onClick={() => setAiQuizActive(false)}
+                      style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)' }}
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
                   </div>
-                  
-                  <div style={{ backgroundColor: '#0f172a', aspectRatio: '1.6', display: 'flex', alignItems: 'center', justify: 'center', position: 'relative' }}>
-                    <div style={{ width: '80%', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '24px', color: 'white' }}>
-                      <span style={{ fontSize: '11px', color: '#fecd0b', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>{selectedLiveClass.subject} • {selectedLiveClass.teacher}</span>
-                      <h3 style={{ margin: '8px 0 16px 0', fontFamily: 'Outfit' }}>Topic: {selectedLiveClass.topic}</h3>
-                      
-                      <div style={{ backgroundColor: '#020617', borderRadius: '6px', padding: '16px', fontSize: '13px', fontFamily: 'monospace', color: '#94a3b8', lineHeight: '1.6', borderLeft: '3px solid #3b82f6' }}>
-                        {"// Live whiteboard classroom session contents"}<br />
-                        {selectedLiveClass.id === 2 ? (
-                          <>
-                            {"const [topic, setTopic] = useState(\"React Hooks\");"}<br />
-                            {"console.log(`Currently teaching: ${topic}`);"}<br />
-                            {"// useState & useEffect live demo"}
-                          </>
-                        ) : (
-                          <>
-                            {"class Node { constructor(data) { this.data = data; this.next = null; } }"}<br />
-                            {"class LinkedList { constructor() { this.head = null; } }"}<br />
-                            {"// Arrays vs Linked Lists comparison demo"}
-                          </>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    {activeQuizQuestions.map((q, qIdx) => (
+                      <div key={qIdx} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <h4 style={{ margin: 0, fontWeight: '600', fontSize: '14px', display: 'flex', gap: '8px' }}>
+                          <span style={{ color: 'var(--primary)' }}>Q{qIdx + 1}.</span> {q.question}
+                        </h4>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                          {q.options.map((option, oIdx) => {
+                            const isSelected = selectedAnswers[qIdx] === oIdx;
+                            const isCorrect = q.correct === oIdx;
+                            let btnStyle = {
+                              padding: '10px 14px',
+                              borderRadius: '8px',
+                              border: '1px solid var(--border)',
+                              backgroundColor: 'white',
+                              textAlign: 'left',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              transition: 'all 0.15s'
+                            };
+
+                            if (isSelected && !quizSubmitted) {
+                              btnStyle.backgroundColor = '#EEF2FF';
+                              btnStyle.borderColor = 'var(--primary)';
+                              btnStyle.color = 'var(--primary)';
+                            }
+
+                            if (quizSubmitted) {
+                              btnStyle.cursor = 'default';
+                              if (isCorrect) {
+                                btnStyle.backgroundColor = '#D1FAE5';
+                                btnStyle.borderColor = '#10B981';
+                                btnStyle.color = '#065F46';
+                              } else if (isSelected) {
+                                btnStyle.backgroundColor = '#FEE2E2';
+                                btnStyle.borderColor = '#EF4444';
+                                btnStyle.color = '#991B1B';
+                              }
+                            }
+
+                            return (
+                              <button 
+                                key={oIdx} 
+                                style={btnStyle}
+                                onClick={() => selectAnswer(qIdx, oIdx)}
+                              >
+                                {option}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {quizSubmitted && (
+                          <div style={{ backgroundColor: '#F8FAFC', padding: '10px 14px', borderRadius: '6px', borderLeft: '3px solid #6B7280', fontSize: '12px', marginTop: '4px', lineHeight: 1.5 }}>
+                            <strong>AI Explanation:</strong> {q.explanation}
+                          </div>
                         )}
                       </div>
+                    ))}
+
+                    <div style={{ display: 'flex', justifyItems: 'center', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '16px', gap: '12px' }}>
+                      {quizSubmitted ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: '700' }}>
+                            Final Score: {quizScore} / {activeQuizQuestions.length} Correct
+                          </span>
+                          <button 
+                            className="btn-join-class"
+                            onClick={() => {
+                              setAiQuizActive(false);
+                            }}
+                          >
+                            Finish
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          className="btn-join-class" 
+                          onClick={handleSubmitQuiz}
+                          style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}
+                        >
+                          Submit Quiz Answers
+                        </button>
+                      )}
                     </div>
-                    
-                    <div style={{ position: 'absolute', bottom: '15px', left: '15px', backgroundColor: 'rgba(0,0,0,0.5)', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', color: '#cbd5e1' }}>
-                      📚 NIT JALANDHAR CLASSROOM E-PORTAL
-                    </div>
                   </div>
                 </div>
+              )}
 
-                {/* Scrolling Captions Bar */}
-                <div className="panel-card-new" style={{ padding: '12px 18px', borderLeft: '4px solid #3b82f6' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span className="badge-live-pill" style={{ backgroundColor: '#2563eb' }}>CAPTION</span>
-                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>
-                      {transcript.length > 0 ? transcript[transcript.length - 1].text : 'Waiting for instructor speech...'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Transcripts lists */}
-              <div className="col-md-4">
-                <div className="panel-card-new" style={{ height: '420px' }}>
-                  <div className="panel-header-new">
-                    <h2 className="panel-title-new">
-                      <span className="glyphicon glyphicon-comment"></span> Live Captions Log
-                    </h2>
-                  </div>
-                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
-                  {transcript.length === 0 ? (
-                    <div style={{ color: '#9ca3af', textAlign: 'center', padding: '40px 0', fontSize: '12px' }}>
-                      Captions appear dynamically.
-                    </div>
-                  ) : (
-                    transcript.map((l, i) => (
-                      <div key={i} style={{ marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #f1f5f9', fontSize: '12px' }}>
-                        <span style={{ color: '#3b82f6', fontFamily: 'monospace', marginRight: '6px' }}>[{l.time}]</span>
-                        <span>{l.text}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    )}
-
-      {/* C. RECORDED LECTURES */}
-      {view === 'recorded' && (
-        <div className="animate-fade-in">
-          <h2 className="erp-page-title">
-            <span className="glyphicon glyphicon-film"></span> Recorded Archives
-          </h2>
-
-          <div className="panel-card-new">
-            <div className="table-responsive-new">
-              <table className="custom-table-new">
-                <thead>
-                  <tr>
-                    <th>Lecture Name</th>
-                    <th>Subject</th>
-                    <th>Record Date</th>
-                    <th>Duration</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ fontWeight: 'bold', color: '#002e5b' }}>Introduction to React Hooks</td>
-                    <td>Web Development</td>
-                    <td>08 Jun 2026</td>
-                    <td>45:12</td>
-                    <td>
-                      <button className="btn-solid-new" style={{ padding: '4px 12px' }} onClick={() => triggerToast("Streaming recording link")}>Play</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ fontWeight: 'bold', color: '#002e5b' }}>Arrays and Linked Lists</td>
-                    <td>Data Structures</td>
-                    <td>07 Jun 2026</td>
-                    <td>52:40</td>
-                    <td>
-                      <button className="btn-solid-new" style={{ padding: '4px 12px' }} onClick={() => triggerToast("Streaming recording link")}>Play</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ fontWeight: 'bold', color: '#002e5b' }}>Normalization in DBMS</td>
-                    <td>Database Management System</td>
-                    <td>06 Jun 2026</td>
-                    <td>48:33</td>
-                    <td>
-                      <button className="btn-solid-new" style={{ padding: '4px 12px' }} onClick={() => triggerToast("Streaming recording link")}>Play</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* D. MY NOTES EDITOR & AI WRITER */}
-      {view === 'notes' && (
-        <div className="animate-fade-in">
-          <h2 className="erp-page-title">
-            <span className="glyphicon glyphicon-pencil"></span> Personal Notebook & study Guide
-          </h2>
-
-          <div className="row">
-            <div className="col-md-7">
-              <div className="panel-card-new">
-                <div className="panel-header-new">
-                  <h3 className="panel-title-new">My Personal Annotations</h3>
-                </div>
-                <textarea 
-                  className="form-input-new" 
-                  rows="14" 
-                  style={{ resize: 'none', lineHeight: '1.6', fontSize: '14px' }} 
-                  placeholder="Type personal notes, class summaries, or calculations here..." 
-                  value={studentNotes} 
-                  onChange={e => setStudentNotes(e.target.value)} 
-                />
-                <div style={{ marginTop: '12px' }}>
-                  <button className="btn-solid-new" onClick={() => triggerToast("Notes saved to dashboard!")}>
-                    <span className="glyphicon glyphicon-floppy-disk"></span> Save Notes
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-5">
-              <div className="panel-card-new" style={{ borderLeft: '4px solid #ea580c', backgroundColor: '#fff7ed', marginBottom: '20px' }}>
-                <div className="panel-header-new" style={{ border: 'none', padding: 0, margin: 0 }}>
-                  <h3 className="panel-title-new" style={{ color: '#c2410c' }}>
-                    <span className="glyphicon glyphicon-flash"></span> AI Study Guide compiler
-                  </h3>
-                </div>
-                <p style={{ fontSize: '13px', color: '#9a3412', marginTop: '10px', lineHeight: '1.5' }}>
-                  Translate live transcript captions from classroom streams into clean markdown summaries with check questions.
-                </p>
-                <button className="btn-action-solid" style={{ backgroundColor: '#ea580c', marginTop: '12px' }} onClick={generateAiNotes}>
-                  Generate Study Guide
-                </button>
-              </div>
-
-              <div className="panel-card-new">
-                <div className="panel-header-new">
-                  <h3 className="panel-title-new">Study Instructions</h3>
-                </div>
-                <ul style={{ paddingLeft: '20px', margin: 0, fontSize: '13px', color: '#4b5563', lineHeight: '1.8' }}>
-                  <li>Connect to ongoing streaming classes to compile live captions.</li>
-                  <li>Write down concepts in your notebook for retention.</li>
-                  <li>Download AI summaries to markdown for offline reviews.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* E. QUIZ & RESULTS VIEW */}
-      {view === 'quiz' && (
-        <div className="animate-fade-in">
-          <h2 className="erp-page-title">
-            <span className="glyphicon glyphicon-check"></span> Quizzes & Scoreboards
-          </h2>
-
-          <div className="row">
-            <div className="col-md-6">
-              <div className="panel-card-new" style={{ minHeight: '280px' }}>
-                <div className="panel-header-new">
-                  <h3 className="panel-title-new">Quiz Performance Log</h3>
-                </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '30px 0' }}>
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#fef2f2', color: '#ef4444', display: 'flex', alignItems: 'center', justify: 'center', fontSize: '32px', marginBottom: '16px' }}>
-                    🏆
-                  </div>
-                  <h4 style={{ fontWeight: 'bold', margin: '0 0 6px 0' }}>Score: {score} pts</h4>
-                  <p style={{ color: '#6b7280', fontSize: '13px', margin: 0 }}>
-                    Score increases by 10 points for each correct answer pushed live!
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <div className="panel-card-new">
-                <div className="panel-header-new">
-                  <h3 className="panel-title-new">Live Classroom leaderboard</h3>
-                </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifycontent: 'space-between', justifyContent: 'space-between', padding: '8px', backgroundColor: '#f8fafc', borderRadius: '6px', fontSize: '13px' }}>
-                    <strong>1. Anjali Verma</strong>
-                    <span style={{ fontWeight: 'bold', color: '#2563eb' }}>40 pts</span>
-                  </div>
-                  <div style={{ display: 'flex', justifycontent: 'space-between', justifyContent: 'space-between', padding: '8px', backgroundColor: '#f8fafc', borderRadius: '6px', fontSize: '13px' }}>
-                    <strong>2. Priya Patel</strong>
-                    <span style={{ fontWeight: 'bold', color: '#2563eb' }}>30 pts</span>
-                  </div>
-                  <div style={{ display: 'flex', justifycontent: 'space-between', justifyContent: 'space-between', padding: '8px', backgroundColor: '#f8fafc', borderRadius: '6px', fontSize: '13px' }}>
-                    <strong>3. Amit Sharma</strong>
-                    <span style={{ fontWeight: 'bold', color: '#2563eb' }}>20 pts</span>
-                  </div>
-                  <div style={{ display: 'flex', justifycontent: 'space-between', justifyContent: 'space-between', padding: '8px', backgroundColor: '#eff6ff', borderRadius: '6px', fontSize: '13px', border: '1px solid #bfdbfe' }}>
-                    <strong>4. Rohan Sharma (You)</strong>
-                    <span style={{ fontWeight: 'bold', color: '#2563eb' }}>{score} pts</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* F. ATTENDANCE VIEW */}
-      {view === 'attendance' && (
-        <div className="animate-fade-in">
-          <h2 className="erp-page-title">
-            <span className="glyphicon glyphicon-calendar"></span> Attendance Logs
-          </h2>
-
-          <div className="row">
-            <div className="col-md-4">
-              <div className="panel-card-new" style={{ textAlign: 'center', padding: '30px 20px' }}>
-                <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#16a34a', marginBottom: '8px' }}>
-                  {attendancePercent}%
-                </div>
-                <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', fontWeight: 'bold', color: '#002e5b' }}>Average Attendance</h3>
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>
-                  Minimum 75% required to qualify for NIT Jalandhar end-term examinations.
-                </p>
-              </div>
-            </div>
-
-            <div className="col-md-8">
-              <div className="panel-card-new">
-                <div className="panel-header-new">
-                  <h3 className="panel-title-new">Recent Attendance Sheets</h3>
-                </div>
-                
-                <div className="table-responsive-new">
-                  <table className="custom-table-new">
+              {/* Standard practice quizzes listing */}
+              <div className="gorgeous-card">
+                <h3 className="section-header-title">
+                  <BookOpenCheck className="h-4 w-4 text-indigo-500" /> Syllabus Practice Tests
+                </h3>
+                <div className="fancy-table-container">
+                  <table className="fancy-table">
                     <thead>
                       <tr>
-                        <th>Date</th>
+                        <th>Quiz Name</th>
                         <th>Subject</th>
-                        <th>Status</th>
+                        <th>Questions</th>
+                        <th>Difficulty</th>
+                        <th>Action / Record</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {attendanceLog.map((log, idx) => (
-                        <tr key={idx}>
-                          <td>{log.date}</td>
-                          <td style={{ fontWeight: 'bold' }}>{log.subject}</td>
+                      {practiceQuizzes.map((quiz) => (
+                        <tr key={quiz.id}>
+                          <td>
+                            <span style={{ fontWeight: '700', color: '#1E293B' }}>{quiz.title}</span>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#EFF6FF', color: 'var(--primary)' }}>
+                              {quiz.subject}
+                            </span>
+                          </td>
+                          <td>{quiz.questions} Qs</td>
                           <td>
                             <span style={{
-                              backgroundColor: log.status === 'Present' ? '#dcfce7' : '#fee2e2',
-                              color: log.status === 'Present' ? '#16a34a' : '#ef4444',
-                              padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold'
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              color: quiz.difficulty === 'Easy' ? '#10B981' : quiz.difficulty === 'Medium' ? '#F59E0B' : '#EF4444'
                             }}>
-                              {log.status}
+                              {quiz.difficulty}
                             </span>
+                          </td>
+                          <td>
+                            {quiz.taken ? (
+                              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600' }}>
+                                Score: {quiz.prevScore} (Taken)
+                              </span>
+                            ) : (
+                              <button 
+                                className="btn-join-class"
+                                onClick={() => {
+                                  setQuizTopic(quiz.subject);
+                                  startAiQuizGeneration();
+                                }}
+                              >
+                                Start Quiz
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -1290,136 +2049,478 @@ const StudentDashboard = ({ user, onLogout, onNavigate }) => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* G. ANNOUNCEMENTS VIEW */}
-      {view === 'announcements' && (
-        <div className="animate-fade-in">
-          <h2 className="erp-page-title">
-            <span className="glyphicon glyphicon-bullhorn"></span> Notices & Board announcements
-          </h2>
-
-          <div className="panel-card-new" style={{ gap: '16px' }}>
-            <div style={{ borderLeft: '4px solid #002e5b', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '0 8px 8px 0' }}>
-              <div style={{ display: 'flex', justifySelf: 'space-between', justifyContent: 'space-between', fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>
-                <strong>FROM: DR. SARAH VERMA</strong>
-                <span>12 June 2026</span>
+          {/* 6. ASSIGNMENTS VIEW */}
+          {activeTab === 'assignments' && (
+            <div className="view-fade-in">
+              <div className="gorgeous-card">
+                <div className="fancy-table-container">
+                  <table className="fancy-table">
+                    <thead>
+                      <tr>
+                        <th>Assignment Name</th>
+                        <th>Subject</th>
+                        <th>Due Date</th>
+                        <th>Points Scale</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assignments.map((ass) => (
+                        <tr key={ass.id}>
+                          <td>
+                            <span style={{ fontWeight: '700', color: '#1E293B' }}>{ass.title}</span>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#EFF6FF', color: 'var(--primary)' }}>
+                              {ass.subject}
+                            </span>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{ass.dueDate}</span>
+                          </td>
+                          <td>{ass.points} pts</td>
+                          <td>
+                            <span className={`badge-status ${ass.status.toLowerCase()}`}>
+                              {ass.status === 'Pending' && <Clock className="h-3 w-3" />}
+                              {ass.status === 'Submitted' && <Check className="h-3 w-3" />}
+                              {ass.status === 'Graded' && <Check className="h-3 w-3" />}
+                              {ass.status}
+                            </span>
+                          </td>
+                          <td>
+                            {ass.status === 'Pending' ? (
+                              <button 
+                                className="btn-join-class"
+                                onClick={() => setActiveAssignmentSubmit(ass)}
+                              >
+                                Submit Task
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '500' }}>
+                                {ass.status === 'Graded' ? ass.grade : 'Waiting review'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <h4 style={{ margin: '0 0 6px 0', fontWeight: 'bold', color: '#002e5b' }}>Web Design Mockup Review Scheduled</h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#4b5563' }}>
-                Please review the Teacher and Student dashboard mockups shared during classes. Final implementations are being evaluated.
-              </p>
-            </div>
 
-            <div style={{ borderLeft: '4px solid #002e5b', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '0 8px 8px 0' }}>
-              <div style={{ display: 'flex', justifySelf: 'space-between', justifyContent: 'space-between', fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>
-                <strong>FROM: DEAN ACADEMICS</strong>
-                <span>08 June 2026</span>
+              {/* Floating Submit Modal */}
+              {activeAssignmentSubmit && (
+                <div style={{
+                  position: 'fixed',
+                  top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: 'rgba(15, 23, 42, 0.4)',
+                  backdropFilter: 'blur(4px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 2000
+                }}>
+                  <div className="gorgeous-card" style={{ width: '100%', maxWidth: '500px', backgroundColor: 'white' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '16px' }}>
+                      <h3 style={{ margin: 0, fontWeight: '700', fontSize: '16px' }}>Submit: {activeAssignmentSubmit.title}</h3>
+                      <button 
+                        onClick={() => setActiveAssignmentSubmit(null)} 
+                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)' }}
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <label style={{ fontSize: '13px', fontWeight: '600' }}>Workspace code solution or repository URL:</label>
+                      <textarea
+                        rows={6}
+                        placeholder="Paste your source code or repository link here..."
+                        value={submissionText}
+                        onChange={(e) => setSubmissionText(e.target.value)}
+                        style={{
+                          width: '100%',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border)',
+                          padding: '12px',
+                          fontSize: '13px',
+                          outline: 'none',
+                          resize: 'vertical',
+                          fontFamily: 'monospace'
+                        }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
+                        <button 
+                          onClick={() => setActiveAssignmentSubmit(null)}
+                          style={{ backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', color: 'var(--text)' }}
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          className="btn-join-class"
+                          onClick={submitAssignmentAction}
+                        >
+                          Submit Solution
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 7. AI TUTOR VIEW */}
+          {activeTab === 'tutor' && (
+            <div className="view-fade-in">
+              <div className="chat-container">
+                {/* Messages panel */}
+                <div className="chat-messages-scroll">
+                  {chatMessages.map((msg, idx) => (
+                    <div key={idx} className={`chat-bubble ${msg.sender}`}>
+                      <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{msg.text}</p>
+                      <span className="chat-time">{msg.time}</span>
+                    </div>
+                  ))}
+                  
+                  {aiTyping && (
+                    <div className="typing-dots">
+                      <div className="typing-dot" />
+                      <div className="typing-dot" />
+                      <div className="typing-dot" />
+                    </div>
+                  )}
+                  <div ref={chatBottomRef} />
+                </div>
+
+                {/* Suggestion Chips */}
+                <div className="chat-chips-container">
+                  {tutorSuggestions.map((s, idx) => (
+                    <button 
+                      key={idx} 
+                      className="chat-chip"
+                      onClick={() => handleSendChatMessage(s.label)}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Send chat block */}
+                <div className="chat-input-bar">
+                  <input
+                    type="text"
+                    placeholder="Type questions about Binary Search..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSendChatMessage(chatInput);
+                    }}
+                    className="chat-input-field"
+                  />
+                  <button 
+                    onClick={() => handleSendChatMessage(chatInput)}
+                    className="chat-send-btn"
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-              <h4 style={{ margin: '0 0 6px 0', fontWeight: 'bold', color: '#002e5b' }}>End-Term Exam Schedules</h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#4b5563' }}>
-                Final schedules are compiled. Verify exam halls and timing rosters on the institute notice board.
-              </p>
             </div>
-          </div>
+          )}
+
+          {/* 8. PROGRESS & ANALYTICS VIEW */}
+          {activeTab === 'progress' && (
+            <div className="view-fade-in">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                
+                {/* Chart Mockup */}
+                <div className="gorgeous-card">
+                  <h3 className="section-header-title">
+                    <TrendingUp className="h-4 w-4 text-indigo-500" /> Weekly Study Time Tracker
+                  </h3>
+                  
+                  <div className="chart-svg-container" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '20px' }}>
+                    {/* SVG/CSS Line/Bar Graph representation */}
+                    {[
+                      { day: 'Mon', hrs: 4, height: '40%' },
+                      { day: 'Tue', hrs: 5, height: '50%' },
+                      { day: 'Wed', hrs: 3, height: '30%' },
+                      { day: 'Thu', hrs: 6, height: '60%' },
+                      { day: 'Fri', hrs: 4, height: '40%' },
+                      { day: 'Sat', hrs: 7, height: '70%' },
+                      { day: 'Sun', hrs: 5, height: '50%' }
+                    ].map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                        <span style={{ fontSize: '11px', fontWeight: '700', marginBottom: '8px' }}>{item.hrs}h</span>
+                        <div style={{ width: '100%', height: '110px', backgroundColor: '#E2E8F0', borderRadius: '4px', position: 'relative', display: 'flex', alignItems: 'flex-end' }}>
+                          <div style={{ width: '100%', height: item.height, background: 'linear-gradient(to top, var(--primary) 0%, #818CF8 100%)', borderRadius: '4px', transition: 'height 0.8s ease-out' }} />
+                        </div>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '500' }}>{item.day}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="dashboard-main-grid">
+                  {/* Topicwise Progress */}
+                  <div className="gorgeous-card">
+                    <h3 className="section-header-title">
+                      <BookOpenCheck className="h-4 w-4 text-emerald-500" /> Topic Mastery Breakdown
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {[
+                        { topic: 'Recursion & Sorting (DSA)', value: 90, color: '#10B981' },
+                        { topic: 'Relational Algebra (DBMS)', value: 70, color: '#3B82F6' },
+                        { topic: 'Process & CPU Scheduling (OS)', value: 50, color: '#F59E0B' },
+                        { topic: 'Routing Protocols & IP Address Class (CN)', value: 30, color: '#EF4444' }
+                      ].map((mastery, idx) => (
+                        <div key={idx}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>
+                            <span>{mastery.topic}</span>
+                            <span>{mastery.value}%</span>
+                          </div>
+                          <div className="fancy-progress-bar-container">
+                            <div className="fancy-progress-bar-fill" style={{ width: `${mastery.value}%`, backgroundColor: mastery.color }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Weak Topics */}
+                  <div className="gorgeous-card">
+                    <h3 className="section-header-title">
+                      <AlertCircle className="h-4 w-4 text-red-500" /> Targeted Weak Areas
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ padding: '14px', borderRadius: '8px', borderLeft: '4px solid #EF4444', backgroundColor: '#FEF2F2' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#B91C1C', textTransform: 'uppercase' }}>Operating Systems</span>
+                        <h4 style={{ margin: '4px 0', fontSize: '13px', fontWeight: '700' }}>Process Synchronization</h4>
+                        <p style={{ fontSize: '12px', color: '#7F1D1D', margin: '4px 0 10px 0', lineHeight: 1.4 }}>
+                          Your diagnostics reveal a low score (45%) in Semaphores. Review the CPU scheduling lecture.
+                        </p>
+                        <button 
+                          onClick={() => {
+                            setLectureFilter('OS');
+                            setActiveTab('lectures');
+                            triggerToast("Redirecting to OS lecture components...");
+                          }}
+                          style={{ backgroundColor: '#EF4444', border: 'none', color: 'white', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          Review Lecture
+                        </button>
+                      </div>
+
+                      <div style={{ padding: '14px', borderRadius: '8px', borderLeft: '4px solid #F59E0B', backgroundColor: '#FFFBEB' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#B45309', textTransform: 'uppercase' }}>Computer Networks</span>
+                        <h4 style={{ margin: '4px 0', fontSize: '13px', fontWeight: '700' }}>CIDR Routing & Subnetting</h4>
+                        <p style={{ fontSize: '12px', color: '#78350F', margin: '4px 0 10px 0', lineHeight: 1.4 }}>
+                          Average quiz score (50%) represents moderate class comprehension. Review IP Subnetting guides.
+                        </p>
+                        <button 
+                          onClick={() => {
+                            setExpandedNoteId(4); // ID 4 is Subnetting Notes
+                            setActiveTab('notes');
+                            triggerToast("Redirecting to Subnetting notes summary...");
+                          }}
+                          style={{ backgroundColor: '#F59E0B', border: 'none', color: 'white', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          Read AI Guide
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* 9. NOTIFICATIONS VIEW */}
+          {activeTab === 'notifications' && (
+            <div className="view-fade-in">
+              <div className="gorgeous-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '16px', marginBottom: '16px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>
+                    You have {unreadNotificationsCount} unread system alerts
+                  </span>
+                  {unreadNotificationsCount > 0 && (
+                    <button 
+                      onClick={markAllNotificationsRead}
+                      style={{ border: 'none', background: 'transparent', color: 'var(--primary)', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+                    >
+                      Mark all as read
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {notifications.map((notif) => (
+                    <div 
+                      key={notif.id} 
+                      style={{
+                        padding: '16px',
+                        borderRadius: '8px',
+                        backgroundColor: notif.read ? 'white' : '#F5F3FF',
+                        border: '1px solid',
+                        borderColor: notif.read ? 'var(--border)' : '#DDD6FE',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{
+                        marginTop: '2px',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: notif.read ? 'transparent' : '#8B5CF6',
+                        flexShrink: 0
+                      }} />
+                      <div style={{ flex: 1 }}>
+                        <p style={{ margin: 0, fontSize: '13.5px', fontWeight: notif.read ? '500' : '700', color: 'var(--text)' }}>
+                          {notif.text}
+                        </p>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>{notif.time}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 10. PROFILE & SETTINGS VIEW */}
+          {activeTab === 'settings' && (
+            <div className="view-fade-in">
+              <div className="settings-grid">
+                {/* Left Profile card */}
+                <div className="profile-side-card">
+                  <div className="profile-avatar-large">
+                    {profile.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 4px 0', color: 'var(--text)' }}>{profile.name}</h3>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', fontWeight: '600' }}>Roll No: {profile.rollNo}</span>
+                  
+                  <div style={{ borderTop: '1px solid var(--border)', marginTop: '20px', paddingTop: '20px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '600' }}>Degree & Major</span>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '13px', fontWeight: '600' }}>{profile.degree}</p>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '600' }}>Email Address</span>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '13px', fontWeight: '600' }}>{profile.email}</p>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '600' }}>Current Semester</span>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '13px', fontWeight: '600' }}>{profile.semester}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Settings Form */}
+                <div className="gorgeous-card">
+                  <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 20px 0', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+                    Configure Student Settings
+                  </h3>
+
+                  <form onSubmit={handleSaveSettings}>
+                    <div className="settings-form-group">
+                      <label className="settings-form-label">Full Legal Name</label>
+                      <input 
+                        type="text" 
+                        value={profile.name}
+                        onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                        className="settings-input-control" 
+                      />
+                    </div>
+
+                    <div className="settings-form-group">
+                      <label className="settings-form-label">Contact Phone Number</label>
+                      <input 
+                        type="text" 
+                        value={profile.phone}
+                        onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                        className="settings-input-control" 
+                      />
+                    </div>
+
+                    <div className="settings-form-group">
+                      <label className="settings-form-label">Primary Career Study Goal</label>
+                      <input 
+                        type="text" 
+                        value={profile.studyGoal}
+                        onChange={(e) => setProfile({ ...profile, studyGoal: e.target.value })}
+                        className="settings-input-control" 
+                      />
+                    </div>
+
+                    <div className="settings-form-group">
+                      <label className="settings-form-label">Preferred Daily Study Window</label>
+                      <input 
+                        type="text" 
+                        value={profile.studyTime}
+                        onChange={(e) => setProfile({ ...profile, studyTime: e.target.value })}
+                        className="settings-input-control" 
+                      />
+                    </div>
+
+                    <h4 style={{ fontSize: '14px', fontWeight: '700', margin: '24px 0 12px 0' }}>Notification Toggles</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div className="form-toggle-row">
+                        <div>
+                          <span style={{ fontSize: '13px', fontWeight: '600' }}>Email Summaries</span>
+                          <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>Get weekly progress summaries via registered email</p>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={profile.emailAlerts}
+                          onChange={(e) => setProfile({ ...profile, emailAlerts: e.target.checked })}
+                          className="toggle-switch-input" 
+                        />
+                      </div>
+
+                      <div className="form-toggle-row">
+                        <div>
+                          <span style={{ fontSize: '13px', fontWeight: '600' }}>SMS Alerts & Reminders</span>
+                          <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>Receive immediate reminders about due deadlines</p>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={profile.smsAlerts}
+                          onChange={(e) => setProfile({ ...profile, smsAlerts: e.target.checked })}
+                          className="toggle-switch-input" 
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+                      <button type="submit" className="btn-submit-settings">
+                        Save Configurations
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </main>
+
+      {/* Floating Status Toast Alert */}
+      {toast && (
+        <div className={`vidyastra-toast ${toast.type}`}>
+          <Sparkles className="h-4 w-4" />
+          <span>{toast.message}</span>
         </div>
       )}
-
-      {/* Live quiz modal popup overlay when pushed */}
-      {liveQuiz && !quizSubmitted && (
-        <div className="modal-overlay-new">
-          <div className="modal-box-new">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ backgroundColor: '#fef3c7', color: '#d97706', fontSize: '11px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '4px' }}>LIVE CLASS QUIZ</span>
-              <span style={{ fontWeight: 'bold', color: quizTimer <= 5 ? '#ef4444' : '#d97706', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span className="glyphicon glyphicon-time"></span> {quizTimer}s
-              </span>
-            </div>
-
-            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#002e5b', marginBottom: '20px', lineHeight: '1.4' }}>
-              {liveQuiz.question}
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {liveQuiz.options.map((option, i) => (
-                <button 
-                  key={i} 
-                  className={`quiz-option-btn-new ${selectedOption === i ? 'selected' : ''}`}
-                  onClick={() => setSelectedOption(i)}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button 
-                className="btn-solid-new" 
-                style={{ flex: 1, height: '40px' }}
-                onClick={submitQuiz}
-              >
-                Submit Answer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Live quiz results feedback popup */}
-      {liveQuiz && quizSubmitted && (
-        <div className="modal-overlay-new">
-          <div className="modal-box-new" style={{ textAlign: 'center', padding: '30px 24px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {selectedOption === liveQuiz.correctIndex ? '🎉' : '❌'}
-            </div>
-            <h3 style={{ color: '#002e5b', fontWeight: 'bold', margin: '0 0 8px 0' }}>
-              {selectedOption === liveQuiz.correctIndex ? 'Correct Answer!' : 'Incorrect Answer!'}
-            </h3>
-            <p style={{ color: '#4b5563', fontSize: '13px', lineHeight: '1.6', marginBottom: '24px' }}>
-              {quizFeedback}
-            </p>
-            <button className="btn-outline-new" style={{ padding: '8px 24px' }} onClick={() => setLiveQuiz(null)}>
-              Back to Dashboard
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* AI summarized notes modal */}
-      {showSummaryModal && (
-        <div className="modal-overlay-new">
-          <div className="modal-box-new modal-box-lg-new">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '12px', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, color: '#002e5b', fontWeight: 'bold', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="glyphicon glyphicon-flash" style={{ color: '#ea580c' }}></span> AI Summarized Study Guide
-              </h3>
-              <button className="btn-outline-new" style={{ padding: '4px 8px', borderRadius: '50%' }} onClick={() => setShowSummaryModal(false)}>✕</button>
-            </div>
-
-            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap', maxHeight: '380px', overflowY: 'auto' }}>
-              {aiSummary}
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'flex-end' }}>
-              <button className="btn-solid-new" onClick={downloadNotes}>
-                <span className="glyphicon glyphicon-download"></span> Download Markdown
-              </button>
-              <button className="btn-outline-new" onClick={() => setShowSummaryModal(false)}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Toast popup */}
-      {toastMessage && (
-        <div className="floating-toast-new">
-          <span className="glyphicon glyphicon-info-sign" style={{ marginRight: '8px' }}></span>
-          {toastMessage}
-        </div>
-      )}
-    </DashboardLayout>
+    </div>
   );
 };
 

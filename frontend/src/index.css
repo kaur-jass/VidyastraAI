@@ -1,20 +1,30 @@
 /* VidyastraAI Global Styles */
 
 :root {
-  --primary: #003A6A;
+  --primary: #4F46E5;
+  --primary-light: #EEF2FF;
+  --primary-dark: #4338CA;
   --accent: #FECD0B;
   --accent-light: #F7DC6F;
-  --bg: #e9ecef;
-  --danger: #990000;
-  --success: #27ae60;
-  --info: #2980b9;
-  --warning: #f39c12;
+  --bg: #F8FAFC;
+  --danger: #EF4444;
+  --success: #10B981;
+  --info: #3B82F6;
+  --warning: #F59E0B;
   --card-bg: #ffffff;
-  --text: #333333;
-  --text-muted: #6c757d;
-  --border: #dee2e6;
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --border: #E2E8F0;
   --sans-font: 'Inter', system-ui, -apple-system, sans-serif;
-  --heading-font: 'Outfit', 'Trebuchet MS', sans-serif;
+  --heading-font: 'Outfit', 'Inter', sans-serif;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
 }
 
 html, body {

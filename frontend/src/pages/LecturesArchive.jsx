@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ERPLayout from '../components/ERPLayout';
 
 const LecturesArchive = ({ user, onLogout, onNavigate, lectures }) => {

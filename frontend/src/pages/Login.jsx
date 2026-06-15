@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ERPLayout from '../components/ERPLayout';
 
 const Login = ({ onLogin, onNavigate }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [captchaInput, setCaptchaInput] = useState('');
-  const [captchaCode, setCaptchaCode] = useState('');
+  const [captchaCode, setCaptchaCode] = useState(() => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let code = '';
+    for (let i = 0; i < 5; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    return code;
+  });
   const [errorMsg, setErrorMsg] = useState('');
   const canvasRef = useRef(null);
 
@@ -47,8 +52,10 @@ const Login = ({ onLogin, onNavigate }) => {
     }
   };
 
-  useEffect(() => { generateCaptcha(); }, []);
-  useEffect(() => { if (captchaCode) drawCaptcha(); }, [captchaCode]);
+  useEffect(() => {
+    if (captchaCode) drawCaptcha();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [captchaCode]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 const ERPLayout = ({ children, user, onLogout, onNavigate, isPublic = false }) => {
   return (
