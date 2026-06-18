@@ -121,7 +121,8 @@ Generate:
 
 ### Backend
 
-* Python
+* Node.js
+* Express.js
 * FastAPI
 
 ### AI & Machine Learning
@@ -136,30 +137,6 @@ Generate:
 
 * MongoDB
 * Vector Database
-
----
-
-## 📂 Project Structure
-
-```bash
-VidyAstraAI/
-│
-├── frontend/
-│
-├── backend/
-│   ├── api/
-│   ├── services/
-│   ├── models/
-│   └── main.py
-│
-├── vision/
-├── ocr/
-├── rag/
-├── embeddings/
-├── uploads/
-│
-└── README.md
-```
 
 ---
 
@@ -179,26 +156,6 @@ VidyAstraAI/
 * Voice-Based AI Tutor
 * Multi-Language Support
 * Mobile Application
-* Learning Analytics Dashboard
-* AI Study Planner
-* Flashcard Generation
-
----
-
-## 👨‍💻 Author
-
-**Vikash Kushwah**
-
-* CSE @ NIT Jalandhar
-* Full Stack Developer
-* Machine Learning Enthusiast
-* Head, Cyber Security Club (CSC NITJ)
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License.
 
 ---
 
