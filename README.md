@@ -25,33 +25,7 @@ VidyAstra AI helps students learn more effectively from PDFs, notes, images, and
 
 ## 🏗️ Architecture
 
-```text
-User Upload
-     │
-     ▼
-OCR Processing
-     │
-     ▼
-Vision Analysis
-     │
-     ▼
-Content Classification
-     │
-     ▼
-Embedding Generation
-     │
-     ▼
-Vector Database
-     │
-     ▼
-RAG Retrieval
-     │
-     ▼
-Large Language Model
-     │
-     ▼
-Notes • Quizzes • Q&A • Summaries
-```
+<img width="1536" height="1024" alt="VidyAstra_AI_Model_Design" src="https://github.com/user-attachments/assets/2f1b3b7e-16fe-4309-91c5-97dbac25cf55" />
 
 ---
 
