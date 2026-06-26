@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import ERPLayout from '../components/ERPLayout';
+import api from '../services/api';
 
 const Login = ({ onLogin, onNavigate }) => {
   const [username, setUsername] = useState('');
@@ -57,7 +58,7 @@ const Login = ({ onLogin, onNavigate }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [captchaCode]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!username.trim()) { setErrorMsg('Please enter Username'); return; }
     if (!password.trim()) { setErrorMsg('Please enter Password'); return; }
@@ -65,14 +66,27 @@ const Login = ({ onLogin, onNavigate }) => {
       setErrorMsg('Invalid CAPTCHA. Please try again.');
       generateCaptcha(); setCaptchaInput(''); return;
     }
-    const role = username.toLowerCase() === 'admin' ? 'admin' : username.toLowerCase() === 'teacher' ? 'teacher' : 'student';
-    const names = { admin: 'Admin Panel', teacher: 'Dr. Sarah Verma', student: username };
-    onLogin(role, names[role] || username);
+    try {
+      const res = await api.login(username, password);
+      if (res.success) {
+        onLogin(res.user.role, res.user.name);
+      } else {
+        setErrorMsg('Login failed');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Login failed');
+    }
   };
 
-  const handleQuickLogin = (role) => {
-    const names = { admin: 'Admin Panel', teacher: 'Dr. Sarah Verma', student: 'Rohan Sharma' };
-    onLogin(role, names[role]);
+  const handleQuickLogin = async (role) => {
+    try {
+      const res = await api.login(role, 'password');
+      if (res.success) {
+        onLogin(res.user.role, res.user.name);
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Quick login failed');
+    }
   };
 
   return (

@@ -1,24 +1,26 @@
 import { useState } from 'react';
 import ERPLayout from '../components/ERPLayout';
+import api from '../services/api';
 
 const ForgotPassword = ({ onNavigate }) => {
   const [email, setEmail] = useState('');
   const [showLoader, setShowLoader] = useState(false);
   const [loaderText, setLoaderText] = useState('Please Wait');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim()) { alert('Please Enter Email ID'); return; }
     setShowLoader(true);
-    setLoaderText('Please Wait');
-    setTimeout(() => {
-      setLoaderText('Sending Reset Link...');
-      setTimeout(() => {
-        setShowLoader(false);
-        alert('Please Check your Email Inbox for Password Reset Link.');
-        onNavigate('login');
-      }, 1000);
-    }, 1200);
+    setLoaderText('Sending Reset Link...');
+    try {
+      const res = await api.forgotPassword(email);
+      setShowLoader(false);
+      alert(res.message || 'Please Check your Email Inbox for Password Reset Link.');
+      onNavigate('login');
+    } catch (err) {
+      setShowLoader(false);
+      alert(err.message || 'Error requesting password reset.');
+    }
   };
 
   return (

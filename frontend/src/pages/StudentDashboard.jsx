@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import api from '../services/api';
 import { 
   GraduationCap, 
   LayoutDashboard, 
@@ -331,7 +332,7 @@ const StudentDashboard = ({ user, onLogout }) => {
     scrollChatToBottom();
   }, [chatMessages, aiTyping]);
 
-  const handleSendChatMessage = (textToSend) => {
+  const handleSendChatMessage = async (textToSend) => {
     if (!textToSend.trim()) return;
 
     // Add user message
@@ -343,24 +344,24 @@ const StudentDashboard = ({ user, onLogout }) => {
     // Trigger typing state
     setAiTyping(true);
 
-    setTimeout(() => {
-      // Find matches in suggestions or use generic reply
-      const matchedSuggestion = tutorSuggestions.find(s => s.label === textToSend);
-      let replyText = "";
-
-      if (matchedSuggestion) {
-        replyText = matchedSuggestion.response;
-      } else {
-        replyText = `That's an interesting question about "${textToSend}"! Under standard Binary Search parameters, let me explain. Always remember that Binary Search is highly optimized for fast lookups. Do you have any questions on how it compares to Linear Search O(n) or how we can implement it recursively?`;
-      }
+    try {
+      const res = await api.askAI(textToSend);
+      const replyText = res.answer || res.content || JSON.stringify(res);
 
       setChatMessages(prev => [...prev, {
         sender: 'ai',
         text: replyText,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
+    } catch (err) {
+      setChatMessages(prev => [...prev, {
+        sender: 'ai',
+        text: "Sorry, I encountered an issue connecting to the Vidyastra AI backend: " + (err.message || err),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    } finally {
       setAiTyping(false);
-    }, 1200);
+    }
   };
 
   // Settings Save Handler

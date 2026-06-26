@@ -568,6 +568,67 @@ const api = {
     } else {
       return apiRequest('/admin/logs');
     }
+  },
+
+  // --- AI INTEGRATION / RAG ENDPOINTS ---
+  askAI: async (question) => {
+    if (USE_MOCK) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      return { answer: `[MOCK AI] You asked: "${question}". This is a simulated RAG response.` };
+    } else {
+      return apiRequest('/ai/ask', {
+        method: 'POST',
+        body: JSON.stringify({ question })
+      });
+    }
+  },
+
+  getAINotes: async () => {
+    if (USE_MOCK) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { content: '# Mocked Detailed AI Notes\n\n- Normalization resolves update anomalies.\n- 1NF resolves multi-valued attributes.' };
+    } else {
+      return apiRequest('/ai/notes');
+    }
+  },
+
+  getAIQuiz: async () => {
+    if (USE_MOCK) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { content: '1. What is 2NF?\na) No partial dependencies\nb) No transitive dependencies\nAnswer: a' };
+    } else {
+      return apiRequest('/ai/quiz');
+    }
+  },
+
+  getAIAssignment: async () => {
+    if (USE_MOCK) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { content: 'Assignment: Design a schema in BCNF for a library system.' };
+    } else {
+      return apiRequest('/ai/assignment');
+    }
+  },
+
+  getAIFlashcards: async () => {
+    if (USE_MOCK) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { flashcards: [{ front: 'BCNF', back: 'Boyce-Codd Normal Form' }] };
+    } else {
+      return apiRequest('/ai/flashcards');
+    }
+  },
+
+  processLectureVideo: async (videoPath) => {
+    if (USE_MOCK) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      return { success: true, message: 'Video processed successfully (Mock)' };
+    } else {
+      return apiRequest('/ai/process-video', {
+        method: 'POST',
+        body: JSON.stringify({ video_path: videoPath })
+      });
+    }
   }
 };
 
