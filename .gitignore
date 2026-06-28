@@ -1,24 +1,29 @@
+# Python Virtual Environment
+venv/
+
+# Node Modules
+frontend/node_modules/
+backend/node_modules/
+
+# Environment Files
+.env
+frontend/.env
+backend/.env
+
+# AI Generated Data
+AI_Architecture/uploads/
+AI_Architecture/outputs/
+AI_Architecture/vectordb/
+
+# Build Files
+frontend/dist/
+backend/dist/
+
+# Python Cache
+__pycache__/
+
+# VS Code
+.vscode/
+
 # Logs
-logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
