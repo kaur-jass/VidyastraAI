@@ -40,11 +40,11 @@ app.use('/uploads', express.static('uploads'));
 // app.use('/api/faculty/settings', require("./modules/Faculty/Settings/SettingsRoutes"));
 // app.use('/api/faculty/students', require("./modules/Faculty/Students/StudentsRoutes"));
 
-// app.use('/api/student/notes', require("./modules/Students/AINotes/AINotesRoutes"));
-// app.use('/api/student/quiz', require("./modules/Students/AIQuiz/AIQuizRoutes"));
-// app.use('/api/student/tutor', require("./modules/Students/AITutor/AITutorRoutes"));
-// app.use('/api/student/assignments', require("./modules/Students/Assignments/AssignmentsRoutes"));
-// app.use('/api/student/courses', require("./modules/Students/Courses/CoursesRoutes"));
+app.use('/api/student/notes', require("./modules/Students/AINotes/AINotesRoutes"));
+app.use('/api/student/quiz', require("./modules/Students/AIQuiz/AIQuizRoutes"));
+app.use('/api/student/tutor', require("./modules/Students/AITutor/AITutorRoutes"));
+app.use('/api/student/assignments', require("./modules/Students/Assignments/AssignmentsRoutes"));
+app.use('/api/student/courses', require("./modules/Students/Courses/CoursesRoutes"));
 // app.use('/api/student/dashboard', require("./modules/Students/Dashboard/DashboardRoutes"));
 // app.use('/api/student/lecture-library', require("./modules/Students/LectureLibrary/LectureLibraryRoutes"));
 // app.use('/api/student/notifications', require("./modules/Students/Notifications/NotificationsRoutes"));

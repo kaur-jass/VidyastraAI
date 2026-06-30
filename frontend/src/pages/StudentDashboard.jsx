@@ -105,23 +105,57 @@ const StudentDashboard = ({ user, onLogout }) => {
   const lectureProgressPercent = Math.round((watchedLecturesCount / lectures.length) * 100);
 
   // My Courses state & data
-  const [courses] = useState([
-    { code: 'CS201', name: 'Data Structures & Algorithms', progress: 75, instructor: 'Dr. Sarah Verma', bgGradient: 'from-blue-500 to-indigo-600', codeColor: 'text-indigo-600', category: 'DSA' },
-    { code: 'CS202', name: 'Database Management Systems', progress: 60, instructor: 'Dr. Sarah Verma', bgGradient: 'from-purple-500 to-pink-600', codeColor: 'text-purple-600', category: 'DBMS' },
-    { code: 'CS203', name: 'Operating Systems', progress: 40, instructor: 'Dr. Amit Singh', bgGradient: 'from-amber-500 to-orange-600', codeColor: 'text-amber-600', category: 'OS' },
-    { code: 'CS204', name: 'Computer Networks', progress: 20, instructor: 'Dr. Neha Gupta', bgGradient: 'from-emerald-500 to-teal-600', codeColor: 'text-emerald-600', category: 'CN' }
-  ]);
+  // const [courses] = useState([
+  //   { code: 'CS201', name: 'Data Structures & Algorithms', progress: 75, instructor: 'Dr. Sarah Verma', bgGradient: 'from-blue-500 to-indigo-600', codeColor: 'text-indigo-600', category: 'DSA' },
+  //   { code: 'CS202', name: 'Database Management Systems', progress: 60, instructor: 'Dr. Sarah Verma', bgGradient: 'from-purple-500 to-pink-600', codeColor: 'text-purple-600', category: 'DBMS' },
+  //   { code: 'CS203', name: 'Operating Systems', progress: 40, instructor: 'Dr. Amit Singh', bgGradient: 'from-amber-500 to-orange-600', codeColor: 'text-amber-600', category: 'OS' },
+  //   { code: 'CS204', name: 'Computer Networks', progress: 20, instructor: 'Dr. Neha Gupta', bgGradient: 'from-emerald-500 to-teal-600', codeColor: 'text-emerald-600', category: 'CN' }
+  // ]);
+
+  
+  //Courses 
+  const [courses, setCourses] = useState([]);
+  const loadCourses = async () => {
+    try {
+        const res = await api.getCourses();
+        setCourses(res.data.data || []);
+    } catch (err) {
+        console.error(err);
+    }
+  };
+  useEffect(() => {
+    loadAssignments();
+    loadCourses();
+    }, []);
 
   // AI Notes State
-  const [notes] = useState([
-    { id: 1, title: 'Binary Tree Traversals Guide', subject: 'DSA', date: '2026-06-12', tags: ['#trees', '#dfs-bfs'], summary: 'Covers Inorder, Preorder, and Postorder recursive algorithms. Includes iterative stack-based DFS and queue-based BFS queue implementations. Highly critical for coding interviews.' },
-    { id: 2, title: 'Normalization & Normal Forms Cheat Sheet', subject: 'DBMS', date: '2026-06-10', tags: ['#normalization', '#sql'], summary: 'Step-by-step resolution from 1NF, 2NF, 3NF, up to BCNF. Explains dependencies, prime attributes, and lossless decompositions.' },
-    { id: 3, title: 'CPU Scheduling Algorithms Overview', subject: 'OS', date: '2026-06-08', tags: ['#scheduling', '#cpu'], summary: 'Comparative analysis of FCFS, SJF, SRTF, Round Robin, and Priority Scheduling. Formulates Gantt chart drawing and turnaround/waiting time computation.' },
-    { id: 4, title: 'Subnetting & IP Addressing Guide', subject: 'CN', date: '2026-06-05', tags: ['#ip-addressing', '#subnets'], summary: 'Visual guide to IPv4 network masking, CIDR notation class subdivisions, and calculating hosting subnet ranges. Demystifies variable-length subnet masking (VLSM).' }
-  ]);
+  // const [notes] = useState([
+  //   { id: 1, title: 'Binary Tree Traversals Guide', subject: 'DSA', date: '2026-06-12', tags: ['#trees', '#dfs-bfs'], summary: 'Covers Inorder, Preorder, and Postorder recursive algorithms. Includes iterative stack-based DFS and queue-based BFS queue implementations. Highly critical for coding interviews.' },
+  //   { id: 2, title: 'Normalization & Normal Forms Cheat Sheet', subject: 'DBMS', date: '2026-06-10', tags: ['#normalization', '#sql'], summary: 'Step-by-step resolution from 1NF, 2NF, 3NF, up to BCNF. Explains dependencies, prime attributes, and lossless decompositions.' },
+  //   { id: 3, title: 'CPU Scheduling Algorithms Overview', subject: 'OS', date: '2026-06-08', tags: ['#scheduling', '#cpu'], summary: 'Comparative analysis of FCFS, SJF, SRTF, Round Robin, and Priority Scheduling. Formulates Gantt chart drawing and turnaround/waiting time computation.' },
+  //   { id: 4, title: 'Subnetting & IP Addressing Guide', subject: 'CN', date: '2026-06-05', tags: ['#ip-addressing', '#subnets'], summary: 'Visual guide to IPv4 network masking, CIDR notation class subdivisions, and calculating hosting subnet ranges. Demystifies variable-length subnet masking (VLSM).' }
+  // ]);
+
+const [notes, setNotes] = useState([]);
+//Extra Segments
+useEffect(() => {
+    loadNotes();
+}, []);
+
+const loadNotes = async () => {
+    try {
+        const res = await api.getAINotes();
+        setNotes(res.data || []);
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+//End of Extra Segments
+
 
   const [expandedNoteId, setExpandedNoteId] = useState(null);
-
+  
   const handleDownloadNote = (title) => {
     triggerToast(`Initializing AI packaging...`);
     setTimeout(() => {
@@ -283,31 +317,62 @@ const StudentDashboard = ({ user, onLogout }) => {
   };
 
   // Assignments State
-  const [assignments, setAssignments] = useState([
-    { id: 1, title: 'Red-Black Trees Implementation', subject: 'DSA', dueDate: '2026-06-18', points: 100, status: 'Pending' },
-    { id: 2, title: 'SQL Practice Set - Joins & Indexes', subject: 'DBMS', dueDate: '2026-06-20', points: 50, status: 'Pending' },
-    { id: 3, title: 'Custom Shell Scripting & Pointers', subject: 'OS', dueDate: '2026-06-14', points: 80, status: 'Submitted' },
-    { id: 4, title: 'IP Addressing Class Subnetting', subject: 'CN', dueDate: '2026-06-11', points: 60, status: 'Graded', grade: 'A (55/60)' }
-  ]);
+  // const [assignments, setAssignments] = useState([
+  //   { id: 1, title: 'Red-Black Trees Implementation', subject: 'DSA', dueDate: '2026-06-18', points: 100, status: 'Pending' },
+  //   { id: 2, title: 'SQL Practice Set - Joins & Indexes', subject: 'DBMS', dueDate: '2026-06-20', points: 50, status: 'Pending' },
+  //   { id: 3, title: 'Custom Shell Scripting & Pointers', subject: 'OS', dueDate: '2026-06-14', points: 80, status: 'Submitted' },
+  //   { id: 4, title: 'IP Addressing Class Subnetting', subject: 'CN', dueDate: '2026-06-11', points: 60, status: 'Graded', grade: 'A (55/60)' }
+  // ]);
+
+  const [assignments, setAssignments] = useState([]);
+
+    useEffect(() => {
+    loadAssignments();
+    }, []);
+
+    const loadAssignments = async () => {
+    const res = await api.getAssignments();
+    setAssignments(res.data || []);
+    };
 
   const [activeAssignmentSubmit, setActiveAssignmentSubmit] = useState(null);
   const [submissionText, setSubmissionText] = useState('');
 
-  const submitAssignmentAction = () => {
-    if (!submissionText.trim()) {
-      alert("Please write or paste your assignment solution before submitting!");
-      return;
-    }
-    setAssignments(prev => prev.map(a => {
-      if (a.id === activeAssignmentSubmit.id) {
-        return { ...a, status: 'Submitted' };
+  // const submitAssignmentAction = () => {
+  //   if (!submissionText.trim()) {
+  //     alert("Please write or paste your assignment solution before submitting!");
+  //     return;
+  //   }
+  //   setAssignments(prev => prev.map(a => {
+  //     if (a.id === activeAssignmentSubmit.id) {
+  //       return { ...a, status: 'Submitted' };
+  //     }
+  //     return a;
+  //   }));
+
+ const submitAssignmentAction = async () => {
+  if (!submissionText.trim()) {
+    alert("Please write or paste your assignment solution before submitting!");
+    return;
+  }
+  try {
+    await api.submitAssignment(
+      activeAssignmentSubmit._id,
+      {
+        submissionText
       }
-      return a;
-    }));
-    triggerToast(`Assignment "${activeAssignmentSubmit.title}" submitted successfully! 🚀`);
+    );
+    await loadAssignments();
+    triggerToast(
+      `Assignment "${activeAssignmentSubmit.title}" submitted successfully! 🚀`
+    );
     setActiveAssignmentSubmit(null);
-    setSubmissionText('');
-  };
+    setSubmissionText("");
+  } catch (err) {
+    alert(err.message);
+  }
+
+};
 
   // AI Tutor State & Ref
   const [chatMessages, setChatMessages] = useState([
@@ -345,8 +410,19 @@ const StudentDashboard = ({ user, onLogout }) => {
     setAiTyping(true);
 
     try {
-      const res = await api.askAI(textToSend);
-      const replyText = res.answer || res.content || JSON.stringify(res);
+
+      // const res = await api.askAI(textToSend);
+      const res = await api.sendTutorMessage(
+      chatId,
+      {
+        message: textToSend
+      }
+    );
+
+const replyText =
+    res.data ||
+    res.message ||
+    "Message sent successfully";
 
       setChatMessages(prev => [...prev, {
         sender: 'ai',
@@ -1765,7 +1841,7 @@ const StudentDashboard = ({ user, onLogout }) => {
             <div className="view-fade-in">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {notes.map((note) => (
-                  <div key={note.id} className="gorgeous-card" style={{ padding: '20px' }}>
+                  <div key={note._id} className="gorgeous-card" style={{ padding: '20px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1786,10 +1862,10 @@ const StudentDashboard = ({ user, onLogout }) => {
 
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button
-                          onClick={() => setExpandedNoteId(expandedNoteId === note.id ? null : note.id)}
+                          onClick={() => setExpandedNoteId(expandedNoteId === note._id ? null : note.id)}
                           style={{ backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', color: 'var(--text)' }}
                         >
-                          {expandedNoteId === note.id ? 'Hide Summary' : 'View AI Summary ✦'}
+                          {expandedNoteId === note._id ? 'Hide Summary' : 'View AI Summary ✦'}
                         </button>
                         <button
                           onClick={() => handleDownloadNote(note.title)}
@@ -1801,7 +1877,7 @@ const StudentDashboard = ({ user, onLogout }) => {
                       </div>
                     </div>
 
-                    {expandedNoteId === note.id && (
+                    {expandedNoteId === note._id && (
                       <div className="note-summary-expandable">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontWeight: '700', fontSize: '12px', marginBottom: '8px' }}>
                           <Sparkles className="h-4 w-4" /> AI Generated Summary
@@ -2007,7 +2083,7 @@ const StudentDashboard = ({ user, onLogout }) => {
                     </thead>
                     <tbody>
                       {practiceQuizzes.map((quiz) => (
-                        <tr key={quiz.id}>
+                        <tr key={quiz._id}>
                           <td>
                             <span style={{ fontWeight: '700', color: '#1E293B' }}>{quiz.title}</span>
                           </td>
@@ -2070,7 +2146,7 @@ const StudentDashboard = ({ user, onLogout }) => {
                     </thead>
                     <tbody>
                       {assignments.map((ass) => (
-                        <tr key={ass.id}>
+                        <tr key={ass._id}>
                           <td>
                             <span style={{ fontWeight: '700', color: '#1E293B' }}>{ass.title}</span>
                           </td>
@@ -2523,6 +2599,5 @@ const StudentDashboard = ({ user, onLogout }) => {
       )}
     </div>
   );
-};
-
+}
 export default StudentDashboard;

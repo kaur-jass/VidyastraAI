@@ -499,13 +499,13 @@ const api = {
     }
   },
 
-  getCourses: async () => {
-    if (USE_MOCK) {
-      return JSON.parse(localStorage.getItem('vidyastra_courses') || '[]');
-    } else {
-      return apiRequest('/admin/courses');
-    }
-  },
+  // getCourses: async () => {
+  //   if (USE_MOCK) {
+  //     return JSON.parse(localStorage.getItem('vidyastra_courses') || '[]');
+  //   } else {
+  //     return apiRequest('/admin/courses');
+  //   }
+  // },
 
   addCourse: async (course) => {
     if (USE_MOCK) {
@@ -583,22 +583,30 @@ const api = {
     }
   },
 
+  // getAINotes: async () => {
+  //   if (USE_MOCK) {
+  //     await new Promise(resolve => setTimeout(resolve, 500));
+  //     return { content: '# Mocked Detailed AI Notes\n\n- Normalization resolves update anomalies.\n- 1NF resolves multi-valued attributes.' };
+  //   } else {
+  //     return apiRequest('/ai/notes');
+  //   }
+  // },
+
   getAINotes: async () => {
-    if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { content: '# Mocked Detailed AI Notes\n\n- Normalization resolves update anomalies.\n- 1NF resolves multi-valued attributes.' };
-    } else {
-      return apiRequest('/ai/notes');
-    }
+    return apiRequest("/student/notes");
   },
 
+  // getAIQuiz: async () => {
+  //   if (USE_MOCK) {
+  //     await new Promise(resolve => setTimeout(resolve, 500));
+  //     return { content: '1. What is 2NF?\na) No partial dependencies\nb) No transitive dependencies\nAnswer: a' };
+  //   } else {
+  //     return apiRequest('/ai/quiz');
+  //   }
+  // },
+
   getAIQuiz: async () => {
-    if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { content: '1. What is 2NF?\na) No partial dependencies\nb) No transitive dependencies\nAnswer: a' };
-    } else {
-      return apiRequest('/ai/quiz');
-    }
+    return apiRequest("/student/quiz");
   },
 
   getAIAssignment: async () => {
@@ -629,7 +637,62 @@ const api = {
         body: JSON.stringify({ video_path: videoPath })
       });
     }
-  }
+  },
+
+  getNotes: async () => {
+    return apiRequest("/student/notes");
+  },
+
+  createNote: async (data) => {
+    return apiRequest("/student/notes", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  getQuizzes: async () => {
+    return apiRequest("/student/quiz");
+  },
+
+  submitQuiz: async (id, data) => {
+    return apiRequest(`/student/quiz/submit/${id}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  getTutorHistory: async () => {
+  return apiRequest("/student/tutor/history");
+  },
+
+  sendTutorMessage: async (id, data) => {
+    return apiRequest(`/student/tutor/${id}/message`, {
+    method: "POST",
+    body: JSON.stringify(data),
+    });
+  },
+
+  getAssignments: async () => {
+  return apiRequest("/student/assignments");
+  },
+
+  submitAssignment: async (id, data) => {
+    return apiRequest(`/student/assignments/submit/${id}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  getCourses: async () => {
+  return apiRequest("/student/courses");
+  },
+
+  updateCourseProgress: async (id, progress) => {
+    return apiRequest(`/student/courses/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        progress,
+      }),
+    });
+  },
+
 };
 
 export default api;
