@@ -45,11 +45,12 @@ app.use('/uploads', express.static('uploads'));
 // app.use('/api/student/tutor', require("./modules/Students/AITutor/AITutorRoutes"));
 // app.use('/api/student/assignments', require("./modules/Students/Assignments/AssignmentsRoutes"));
 // app.use('/api/student/courses', require("./modules/Students/Courses/CoursesRoutes"));
-// app.use('/api/student/dashboard', require("./modules/Students/Dashboard/DashboardRoutes"));
-// app.use('/api/student/lecture-library', require("./modules/Students/LectureLibrary/LectureLibraryRoutes"));
-// app.use('/api/student/notifications', require("./modules/Students/Notifications/NotificationsRoutes"));
-// app.use('/api/student/profile', require("./modules/Students/Profile/ProfileRoutes"));
-// app.use('/api/student/progress', require("./modules/Students/Progress/ProgressRoutes"));
+
+app.use('/api/student/dashboard', require("./modules/Students/Dashboard/DashboardRoutes"));
+app.use('/api/student/lecture-library', require("./modules/Students/LectureLibrary/LectureLibraryRoutes"));
+app.use('/api/student/notifications', require("./modules/Students/Notifications/NotificationsRoutes"));
+app.use('/api/student/profile', require("./modules/Students/Profile/ProfileRoutes"));
+app.use('/api/student/progress', require("./modules/Students/Progress/ProgressRoutes"));
 
 
 app.get('/health', (req, res) => {
