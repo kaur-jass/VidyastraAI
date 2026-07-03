@@ -54,4 +54,4 @@ const aiSettingsSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('AISettings', aiSettingsSchema);
+module.exports = mongoose.model('AdminAISettings', aiSettingsSchema);

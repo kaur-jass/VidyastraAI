@@ -71,30 +71,61 @@ const api = {
     return apiRequest('/student/profile');
   },
 
-  getStudentRecentActivity: async () => {
-    return apiRequest('/student/activity');
+  getStudentCourses: async () => {
+    return apiRequest('/student/courses');
+  },
+
+  getStudentLectures: async () => {
+    return apiRequest('/student/lecture-library');
+  },
+
+  getStudentNotifications: async () => {
+    return apiRequest('/student/notifications');
+  },
+
+  submitStudentAssignment: async (assignmentId, submissionText) => {
+    return apiRequest(`/student/assignments/submit/${assignmentId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ submissionText })
+    });
   },
 
   // --- TEACHER DASHBOARD ENDPOINTS ---
   getTeacherProfile: async () => {
-    return apiRequest('/teacher/profile');
+    return apiRequest('/faculty/settings');
+  },
+
+  getFacultyStudents: async () => {
+    return apiRequest('/faculty/students');
+  },
+
+  getFacultyAssignments: async () => {
+    return apiRequest('/faculty/assignments');
+  },
+
+  getFacultyProcessingCenter: async () => {
+    return apiRequest('/faculty/processing-center');
+  },
+
+  getFacultyMessages: async () => {
+    return apiRequest('/faculty/messages');
   },
 
   uploadLecture: async (courseCode, title, type, url) => {
-    return apiRequest(`/teacher/courses/${courseCode}/lectures`, {
+    return apiRequest(`/faculty/record-lecture`, {
       method: 'POST',
-      body: JSON.stringify({ title, type, url })
+      body: JSON.stringify({ courseCode, title, type, url })
     });
   },
 
   getSubmissions: async () => {
-    return apiRequest('/teacher/submissions');
+    return apiRequest('/faculty/assignments');
   },
 
   gradeSubmission: async (submissionId, marks, feedback) => {
-    return apiRequest(`/teacher/submissions/${submissionId}/grade`, {
+    return apiRequest(`/faculty/assignments/grade`, {
       method: 'POST',
-      body: JSON.stringify({ marks, feedback })
+      body: JSON.stringify({ submissionId, marks, feedback })
     });
   },
 
@@ -210,22 +241,26 @@ const api = {
 
   // --- AI INTEGRATION / RAG ENDPOINTS ---
   askAI: async (question) => {
-    return apiRequest('/ai/ask', {
+    return apiRequest('/student/tutor/ask', {
       method: 'POST',
       body: JSON.stringify({ question })
     });
   },
 
   getAINotes: async () => {
-    return apiRequest('/ai/notes');
+    return apiRequest('/student/notes');
+  },
+
+  getStudentProgress: async () => {
+    return apiRequest('/student/progress');
   },
 
   getAIQuiz: async () => {
-    return apiRequest('/ai/quiz');
+    return apiRequest('/student/quiz');
   },
 
   getAIAssignment: async () => {
-    return apiRequest('/ai/assignment');
+    return apiRequest('/student/assignments');
   },
 
   getAIFlashcards: async () => {

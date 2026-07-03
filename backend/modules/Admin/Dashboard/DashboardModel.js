@@ -14,4 +14,4 @@ const dashboardConfigSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('DashboardConfig', dashboardConfigSchema);
+module.exports = mongoose.model('AdminDashboardConfig', dashboardConfigSchema);

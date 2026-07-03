@@ -27,4 +27,4 @@ const analyticsMetricSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('AnalyticsMetric', analyticsMetricSchema);
+module.exports = mongoose.model('AdminAnalyticsMetric', analyticsMetricSchema);
