@@ -46,6 +46,6 @@ const AITutorSchema = new mongoose.Schema(
 });
 
 module.exports = mongoose.model(
-    "AITutor",
+    "StudentsAITutor",
     AITutorSchema
 );

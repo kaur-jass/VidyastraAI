@@ -65,6 +65,6 @@ const AssignmentSchema = new mongoose.Schema(
 });
 
 module.exports = mongoose.model(
-    "Assignments",
+    "StudentsAssignments",
     AssignmentSchema
 );

@@ -51,4 +51,4 @@ const AINotesSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("AINotes", AINotesSchema);
+module.exports = mongoose.model("StudentsAINotes", AINotesSchema);

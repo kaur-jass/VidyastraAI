@@ -71,4 +71,4 @@ const AIQuizSchema = new mongoose.Schema({
     timestamps:true
 });
 
-module.exports = mongoose.model("AIQuiz", AIQuizSchema);
+module.exports = mongoose.model("StudentsAIQuiz", AIQuizSchema);

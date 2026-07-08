@@ -31,7 +31,7 @@ const Login = ({ onLogin, onNavigate }) => {
     ctx.fillStyle = '#eff6ff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < 6; i++) {
-      ctx.strokeStyle = `rgba(${Math.floor(Math.random()*100)}, ${Math.floor(Math.random()*150)}, 255, 0.4)`;
+      ctx.strokeStyle = `rgba(${Math.floor(Math.random() * 100)}, ${Math.floor(Math.random() * 150)}, 255, 0.4)`;
       ctx.lineWidth = Math.random() * 2 + 1;
       ctx.beginPath();
       ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
@@ -78,16 +78,6 @@ const Login = ({ onLogin, onNavigate }) => {
     }
   };
 
-  const handleQuickLogin = async (role) => {
-    try {
-      const res = await api.login(role, 'password');
-      if (res.success) {
-        onLogin(res.user.role, res.user.name);
-      }
-    } catch (err) {
-      setErrorMsg(err.message || 'Quick login failed');
-    }
-  };
 
   return (
     <ERPLayout isPublic onNavigate={onNavigate}>
@@ -134,19 +124,11 @@ const Login = ({ onLogin, onNavigate }) => {
             </button>
             <br /><br />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: '#6b7280' }}>* Use: <b>admin</b>, <b>teacher</b>, or <b>student</b></span>
               <a style={{ color: '#990000', cursor: 'pointer', fontSize: '14px' }} onClick={() => onNavigate('forgot')}>Forgot Password?</a>
             </div>
           </form>
 
-          {/* Quick Demo */}
-          <hr style={{ margin: '20px 0 15px' }} />
-          <p style={{ fontSize: '12px', color: '#6b7280', textAlign: 'center', marginBottom: '10px' }}>Quick Demo Login:</p>
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-            <button onClick={() => handleQuickLogin('admin')} className="btn btn-xs" style={{ backgroundColor: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 600, padding: '5px 14px' }}>Admin</button>
-            <button onClick={() => handleQuickLogin('teacher')} className="btn btn-xs" style={{ backgroundColor: '#2980b9', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 600, padding: '5px 14px' }}>Teacher</button>
-            <button onClick={() => handleQuickLogin('student')} className="btn btn-xs" style={{ backgroundColor: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 600, padding: '5px 14px' }}>Student</button>
-          </div>
+
         </div>
       </div>
     </ERPLayout>
