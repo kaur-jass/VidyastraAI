@@ -6,10 +6,10 @@ export const dashboardService = {
 
   // Student specific calls
   getStudentCourses: () => api.get('/student/my-courses'),
-  
+
   // Faculty specific calls
-  getLiveClass: () => api.get('/faculty/live-classes'),
-  
+  getLiveClasses: () => api.get('/faculty/live-classes'),
+
   // Admin specific calls
   getAdminOverview: () => api.get('/admin/overview'),
 };
